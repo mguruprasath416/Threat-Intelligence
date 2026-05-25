@@ -1,0 +1,20 @@
+/* MainLayout.css */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-left: var(--sidebar-width);
+  margin-top: var(--navbar-height);
+  flex: 1;
+  min-height: calc(100vh - var(--navbar-height));
+  overflow-x: hidden;
+  background: var(--bg-void);
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+}

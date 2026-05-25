@@ -1,0 +1,69 @@
+/* Alerts.css */
+.alert-container {
+  position: fixed;
+  bottom: var(--space-lg);
+  right: var(--space-lg);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-width: 380px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 12px var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  background: var(--bg-panel);
+  animation: fadeSlideIn 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.alert-success { border-color: rgba(0,255,136,0.4);  }
+.alert-error   { border-color: rgba(255,51,85,0.4);  }
+.alert-warning { border-color: rgba(255,204,0,0.4);  }
+.alert-info    { border-color: rgba(0,212,255,0.4);  }
+
+.alert-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.alert-success .alert-icon { color: var(--green);  }
+.alert-error   .alert-icon { color: var(--red);    }
+.alert-warning .alert-icon { color: var(--yellow); }
+.alert-info    .alert-icon { color: var(--cyan);   }
+
+.alert-message {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.alert-close {
+  background: none; border: none;
+  color: var(--text-dim);
+  cursor: pointer; font-size: 12px;
+  padding: 2px 4px;
+  transition: var(--transition);
+}
+.alert-close:hover { color: var(--text-primary); }
+
+/* Countdown progress bar at bottom */
+.alert-progress {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 2px;
+  width: 100%;
+  animation: shrink 5s linear forwards;
+}
+.alert-success .alert-progress { background: var(--green); }
+.alert-error   .alert-progress { background: var(--red);   }
+.alert-warning .alert-progress { background: var(--yellow);}
+.alert-info    .alert-progress { background: var(--cyan);  }
+
+@keyframes shrink { from { width: 100%; } to { width: 0%; } }

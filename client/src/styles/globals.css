@@ -1,0 +1,324 @@
+/* ============================================================
+   globals.css — DESIGN SYSTEM & GLOBAL STYLES
+   ============================================================
+   Aesthetic direction: Dark terminal/cyber-ops — like a real
+   SOC analyst workstation. Deep navy-black backgrounds, sharp
+   cyan-green accents, monospace data display, scanline texture.
+   Feels like a military-grade threat intelligence platform.
+
+   Design tokens (CSS variables) are the single source of truth
+   for all colors, spacing, and typography across the app.
+   Change a variable here → updates everywhere automatically.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600&display=swap');
+
+/* ── CSS Variables (Design Tokens) ─────────────────────────── */
+:root {
+  /* Core Palette */
+  --bg-void:        #020408;       /* Deepest black — page background */
+  --bg-base:        #080f1a;       /* Dark navy — card backgrounds */
+  --bg-elevated:    #0d1829;       /* Slightly lighter — hover states */
+  --bg-panel:       #0a1520;       /* Panels and sidebars */
+  --bg-overlay:     rgba(8,15,26,0.95);
+
+  /* Accent Colors */
+  --cyan:           #00d4ff;       /* Primary accent — cyan glow */
+  --cyan-dim:       #0090b3;       /* Muted cyan */
+  --cyan-glow:      rgba(0,212,255,0.15);
+  --green:          #00ff88;       /* Success / low severity */
+  --green-dim:      rgba(0,255,136,0.12);
+  --yellow:         #ffcc00;       /* Warning / medium severity */
+  --yellow-dim:     rgba(255,204,0,0.12);
+  --orange:         #ff8800;       /* High severity */
+  --orange-dim:     rgba(255,136,0,0.12);
+  --red:            #ff3355;       /* Critical severity */
+  --red-dim:        rgba(255,51,85,0.12);
+  --red-glow:       rgba(255,51,85,0.25);
+
+  /* Severity Colors — used consistently everywhere */
+  --severity-low:      var(--green);
+  --severity-medium:   var(--yellow);
+  --severity-high:     var(--orange);
+  --severity-critical: var(--red);
+
+  /* Text */
+  --text-primary:   #e8f4f8;       /* Near white */
+  --text-secondary: #7a9bb5;       /* Muted blue-grey */
+  --text-dim:       #3d5a6e;       /* Very dim */
+  --text-accent:    var(--cyan);
+
+  /* Borders */
+  --border:         rgba(0,212,255,0.12);
+  --border-bright:  rgba(0,212,255,0.35);
+  --border-dim:     rgba(255,255,255,0.04);
+
+  /* Typography */
+  --font-display:   'Rajdhani', sans-serif;    /* Headers, labels */
+  --font-mono:      'Share Tech Mono', monospace; /* Data, IOC values */
+  --font-body:      'Exo 2', sans-serif;       /* Body text, descriptions */
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-cyan:    0 0 20px rgba(0,212,255,0.12), 0 0 40px rgba(0,212,255,0.06);
+  --shadow-red:     0 0 20px rgba(255,51,85,0.2),  0 0 40px rgba(255,51,85,0.1);
+  --shadow-card:    0 4px 24px rgba(0,0,0,0.4);
+
+  /* Transitions */
+  --transition:     all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --sidebar-width:  240px;
+  --navbar-height:  60px;
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+
+  /* Subtle scanline texture — gives the "terminal" feel */
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,212,255,0.008) 2px,
+      rgba(0,212,255,0.008) 4px
+    );
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+
+/* ── Typography ─────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+code, pre, .mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+a {
+  color: var(--cyan);
+  text-decoration: none;
+  transition: var(--transition);
+}
+a:hover { color: var(--text-primary); }
+
+/* ── Utility Classes ─────────────────────────────────────────── */
+
+/* Cards */
+.card {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan-dim), transparent);
+  opacity: 0;
+  transition: var(--transition);
+}
+.card:hover::before { opacity: 1; }
+.card:hover {
+  border-color: var(--border-bright);
+  box-shadow: var(--shadow-cyan);
+}
+
+/* Severity Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 2px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.badge-low      { color: var(--severity-low);      background: var(--green-dim);  border: 1px solid rgba(0,255,136,0.3); }
+.badge-medium   { color: var(--severity-medium);   background: var(--yellow-dim); border: 1px solid rgba(255,204,0,0.3); }
+.badge-high     { color: var(--severity-high);     background: var(--orange-dim); border: 1px solid rgba(255,136,0,0.3); }
+.badge-critical { color: var(--severity-critical); background: var(--red-dim);    border: 1px solid rgba(255,51,85,0.3);
+  animation: criticalPulse 2s ease-in-out infinite; }
+
+@keyframes criticalPulse {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 8px rgba(255,51,85,0.5); }
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 8px 18px;
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--cyan);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn:hover {
+  background: var(--cyan-glow);
+  box-shadow: 0 0 12px rgba(0,212,255,0.2);
+}
+.btn-primary {
+  background: var(--cyan);
+  color: var(--bg-void);
+  border-color: var(--cyan);
+}
+.btn-primary:hover {
+  background: #33ddff;
+  box-shadow: 0 0 20px rgba(0,212,255,0.4);
+}
+.btn-danger {
+  color: var(--red);
+  border-color: rgba(255,51,85,0.4);
+}
+.btn-danger:hover {
+  background: var(--red-dim);
+  box-shadow: 0 0 12px rgba(255,51,85,0.2);
+}
+
+/* Input Fields */
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: var(--transition);
+}
+.input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px var(--cyan-glow);
+}
+.input::placeholder { color: var(--text-dim); }
+
+/* Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.data-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+.data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-dim);
+  vertical-align: middle;
+}
+.data-table tr:hover td { background: var(--bg-elevated); }
+
+/* Glowing text */
+.text-glow {
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0,212,255,0.6);
+}
+
+/* Animated entry */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation: fadeSlideIn 0.4s ease forwards;
+}
+
+/* Blinking cursor */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.cursor::after {
+  content: '▋';
+  color: var(--cyan);
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+/* Status dot */
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.status-dot.online  { background: var(--green);  box-shadow: 0 0 6px var(--green); }
+.status-dot.offline { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+.status-dot.warning { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+
+/* Grid layouts */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-lg); }
+
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+}

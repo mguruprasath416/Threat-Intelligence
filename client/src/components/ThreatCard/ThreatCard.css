@@ -1,0 +1,263 @@
+/* ThreatCard.css */
+.threat-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  animation: fadeSlideIn 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Left severity bar */
+.threat-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.threat-card.severity-low::before      { background: var(--green);  box-shadow: 0 0 8px var(--green); }
+.threat-card.severity-medium::before   { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+.threat-card.severity-high::before     { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+.threat-card.severity-critical::before { background: var(--red);    box-shadow: 0 0 12px var(--red); }
+
+/* Header */
+.tc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-xl);
+  gap: var(--space-lg);
+}
+
+.tc-indicator-block { flex: 1; min-width: 0; }
+
+.tc-type-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 2px;
+  margin-bottom: var(--space-sm);
+}
+
+.tc-indicator {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--text-primary);
+  word-break: break-all;
+  margin-bottom: var(--space-sm);
+  letter-spacing: 0.02em;
+}
+
+.cached-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+.tc-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+/* Gauge */
+.threat-gauge {
+  position: relative;
+  width: 96px; height: 96px;
+  display: flex; align-items: center; justify-content: center;
+}
+.threat-gauge svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+
+.gauge-score {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  line-height: 1;
+}
+.score-number {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: bold;
+}
+.score-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* Section */
+.tc-section {
+  margin-bottom: var(--space-xl);
+}
+.tc-section:last-of-type { margin-bottom: 0; }
+
+.tc-section-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: var(--space-sm);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+/* API Scores */
+.api-scores-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.api-score-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  text-align: center;
+  transition: var(--transition);
+}
+.api-score-card:hover { border-color: var(--border); }
+
+.api-name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin-bottom: var(--space-sm);
+}
+
+.api-detection { margin-bottom: 2px; }
+
+.detect-bad {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--red);
+}
+.detect-sep  { font-family: var(--font-mono); font-size: 14px; color: var(--text-dim); }
+.detect-total{ font-family: var(--font-mono); font-size: 14px; color: var(--text-secondary); }
+
+.api-sublabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.api-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.api-na {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: var(--space-md) 0;
+}
+
+/* Geo */
+.geo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-sm);
+}
+.geo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-dim);
+}
+.geo-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+.geo-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+/* MITRE */
+.mitre-list { display: flex; flex-direction: column; gap: 6px; }
+.mitre-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid rgba(124,106,247,0.6);
+}
+.mitre-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: bold;
+  color: #7c6af7;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+.mitre-name {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-primary);
+  flex: 1;
+}
+.mitre-tactic {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  background: rgba(124,106,247,0.1);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* Tags */
+.tags-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  padding: 3px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Footer */
+.tc-footer {
+  display: flex;
+  gap: var(--space-xl);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-dim);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.tc-footer strong { color: var(--text-secondary); }
+
+@media (max-width: 640px) {
+  .api-scores-grid { grid-template-columns: 1fr; }
+  .tc-header { flex-direction: column; }
+  .tc-footer { flex-direction: column; gap: var(--space-sm); }
+}

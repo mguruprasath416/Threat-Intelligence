@@ -1,0 +1,55 @@
+/* Charts.css */
+.chart-container { position: relative; }
+
+.chart-tooltip {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-cyan);
+}
+.tooltip-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 4px;
+}
+.tooltip-row {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 11px;
+}
+.tooltip-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.tooltip-name { color: var(--text-secondary); }
+.tooltip-value{ color: var(--text-primary); font-weight: bold; }
+
+/* Donut center overlay */
+.donut-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -56%);
+  text-align: center;
+  pointer-events: none;
+}
+.donut-total {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--cyan);
+}
+.donut-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+}
+
+.chart-empty {
+  height: 220px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}

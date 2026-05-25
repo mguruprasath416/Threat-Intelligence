@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Environment files (NEVER push these — contains API keys)
+.env
+client/.env
+server/.env
+*.env
+
+# Logs
+server/logs/
+*.log
+
+# Build output
+client/dist/
+client/build/
+
+# MongoDB data
+data/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,168 @@
+/* Dashboard.css — and shared page layout styles */
+
+/* ── Page Layout ──────────────────────────────────────────── */
+.dashboard-page,
+.search-page,
+.feed-page,
+.reports-page,
+.ioc-details-page {
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.page-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+/* ── Page Header ─────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+}
+
+.page-subtitle {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ── KPI Cards ────────────────────────────────────────────── */
+.kpi-grid { align-items: stretch; }
+
+.stat-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent, var(--cyan));
+  opacity: 0.4;
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  border-color: var(--border-bright);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.stat-card:hover::after { opacity: 1; }
+
+.stat-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-sm);
+}
+
+.stat-icon {
+  font-size: 20px;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.stat-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.stat-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ── Chart Panels ─────────────────────────────────────────── */
+.charts-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+}
+
+@media (max-width: 900px) {
+  .charts-row-2 { grid-template-columns: 1fr; }
+}
+
+.chart-panel {
+  min-height: 280px;
+}
+
+.chart-panel-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+/* ── Tag Cloud ────────────────────────────────────────────── */
+.tags-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-md) 0;
+}
+
+.cloud-tag {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  cursor: default;
+  transition: var(--transition);
+  position: relative;
+}
+
+.cloud-tag:hover { color: var(--cyan); }
+
+.tag-count {
+  font-size: 9px;
+  color: var(--cyan);
+  margin-left: 2px;
+}

@@ -1,0 +1,65 @@
+/* IOCDetails.css */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.breadcrumb-back {
+  background: none; border: none;
+  color: var(--cyan); cursor: pointer;
+  font-family: var(--font-mono); font-size: 12px;
+  transition: var(--transition);
+}
+.breadcrumb-back:hover { color: var(--text-primary); }
+.breadcrumb-sep   { color: var(--text-dim); }
+.breadcrumb-current { color: var(--text-secondary); }
+
+.details-error {
+  text-align: center;
+  padding: var(--space-2xl);
+}
+.error-code {
+  font-family: var(--font-mono);
+  font-size: 72px;
+  color: var(--text-dim);
+  opacity: 0.3;
+  margin-bottom: var(--space-md);
+}
+.error-msg {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+/* Raw JSON */
+.raw-section {}
+.raw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: var(--space-md);
+}
+.raw-toggle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+.raw-json {
+  padding: var(--space-lg);
+  background: var(--bg-void);
+  border-top: 1px solid var(--border-dim);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--green);
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  animation: fadeSlideIn 0.2s ease;
+}

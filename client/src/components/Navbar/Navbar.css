@@ -1,0 +1,157 @@
+/* Navbar.css */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--navbar-height);
+  background: rgba(8, 15, 26, 0.96);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-lg);
+  z-index: 1000;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Subtle top glow line */
+.navbar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--cyan) 30%, var(--cyan) 70%, transparent 100%);
+  opacity: 0.4;
+}
+
+/* Brand */
+.navbar-brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon { display: flex; align-items: center; filter: drop-shadow(0 0 6px rgba(0,212,255,0.5)); }
+.brand-text { display: flex; flex-direction: column; }
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0,212,255,0.4);
+}
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* Status */
+.navbar-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+.status-item { display: flex; align-items: center; gap: 6px; }
+.status-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+.status-divider { color: var(--border-bright); font-size: 10px; }
+.threat-level { color: var(--text-secondary); }
+.threat-value { font-family: var(--font-mono); font-size: 11px; font-weight: bold; }
+.threat-value.high { color: var(--orange); text-shadow: 0 0 6px rgba(255,136,0,0.5); }
+.threat-value.critical { color: var(--red); text-shadow: 0 0 6px rgba(255,51,85,0.5); }
+
+/* Right */
+.navbar-right { display: flex; align-items: center; gap: var(--space-lg); }
+
+/* Clock */
+.navbar-clock { text-align: right; }
+.clock-time {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--cyan);
+  letter-spacing: 0.05em;
+}
+.clock-date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+/* User */
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition: var(--transition);
+  position: relative;
+}
+.navbar-user:hover { border-color: var(--border); background: var(--bg-elevated); }
+
+.user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--cyan-glow);
+  border: 1px solid var(--cyan-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+.user-info { display: flex; flex-direction: column; }
+.user-name {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.user-role {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+.chevron { color: var(--text-dim); font-size: 12px; }
+
+/* Dropdown */
+.user-menu {
+  position: absolute;
+  top: calc(100% + 8px); right: 0;
+  min-width: 200px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-cyan);
+  animation: fadeSlideIn 0.15s ease;
+}
+.user-menu-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.user-menu-item {
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: var(--red);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.user-menu-item:hover { background: var(--red-dim); }
