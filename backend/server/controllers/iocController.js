@@ -42,16 +42,19 @@ const searchIOC = async (req, res, next) => {
       return res.status(400).json({ success: false, message: validation.error });
     }
 
-    // Step 2: Check if we already have fresh data in DB
+    // Step 2: Check if we already have fresh data in DB for THIS user
     // "Fresh" = enriched within the last 24 hours
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const userId    = req.user.userId;
+
     let existingIOC = await IOC.findOne({
-      indicator: indicator.trim(),
-      iocType:   validation.type,
+      indicator:   indicator.trim(),
+      iocType:     validation.type,
+      submittedBy: userId,
     });
 
     if (existingIOC && existingIOC.lastEnriched > oneDayAgo) {
-      logger.info(`Cache hit for ${indicator} — returning stored data`);
+      logger.info(`Cache hit for ${indicator} (User: ${userId}) — returning stored data`);
       return res.status(200).json({
         success: true,
         cached:  true,
@@ -60,23 +63,26 @@ const searchIOC = async (req, res, next) => {
     }
 
     // Step 3: Enrich — call all relevant APIs
-    logger.info(`Cache miss for ${indicator} — enriching now`);
+    logger.info(`Cache miss for ${indicator} (User: ${userId}) — enriching now`);
     const enrichedData = await enrichIOC(indicator.trim());
 
-    // Step 4: Save or update in MongoDB
-    // findOneAndUpdate with upsert: true → creates if not exists
+    // Step 4: Save or update in MongoDB (scoped to user)
     const savedIOC = await IOC.findOneAndUpdate(
-      { indicator: indicator.trim(), iocType: validation.type },
+      { 
+        indicator:   indicator.trim(), 
+        iocType:     validation.type,
+        submittedBy: userId 
+      },
       {
         $set: {
           ...enrichedData,
-          submittedBy: req.user?._id || null, // req.user set by authMiddleware
+          submittedBy: userId,
         }
       },
       {
-        new:    true,   // Return the updated document (not the old one)
-        upsert: true,   // Create if it doesn't exist
-        runValidators: true, // Run schema validators on update
+        new:    true,
+        upsert: true,
+        runValidators: true,
       }
     );
 
@@ -107,8 +113,11 @@ const getAllIOCs = async (req, res, next) => {
       isActive = true,
     } = req.query;
 
-    // Build MongoDB query filter dynamically
-    const filter = { isActive: isActive === 'true' || isActive === true };
+    // Build MongoDB query filter dynamically — scope to user
+    const filter = { 
+      isActive: isActive === 'true' || isActive === true,
+      submittedBy: req.user.userId 
+    };
 
     if (severity) filter.severity = severity;
     if (iocType)  filter.iocType  = iocType;
@@ -156,6 +165,9 @@ const getAllIOCs = async (req, res, next) => {
 const getIOCStats = async (req, res, next) => {
   try {
 
+    const userId = req.user.userId;
+    const commonMatch = { isActive: true, submittedBy: userId };
+
     // Run all aggregations in parallel for speed
     const [
       severityCounts,
@@ -167,21 +179,27 @@ const getIOCStats = async (req, res, next) => {
 
       // Count by severity level
       IOC.aggregate([
-        { $match: { isActive: true } },
+        { $match: commonMatch },
         { $group: { _id: '$severity', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
 
       // Count by IOC type
       IOC.aggregate([
-        { $match: { isActive: true } },
+        { $match: commonMatch },
         { $group: { _id: '$iocType', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
 
       // Top countries by IP IOCs
       IOC.aggregate([
-        { $match: { iocType: 'ip', 'geoLocation.country': { $ne: null } } },
+        { 
+          $match: { 
+            ...commonMatch, 
+            iocType: 'ip', 
+            'geoLocation.country': { $ne: null } 
+          } 
+        },
         { $group: { _id: '$geoLocation.country', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 10 },
@@ -191,6 +209,7 @@ const getIOCStats = async (req, res, next) => {
       IOC.aggregate([
         {
           $match: {
+            ...commonMatch,
             createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
           }
         },
@@ -207,7 +226,7 @@ const getIOCStats = async (req, res, next) => {
 
       // Top tags
       IOC.aggregate([
-        { $match: { isActive: true } },
+        { $match: commonMatch },
         { $unwind: '$tags' },
         { $group: { _id: '$tags', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
@@ -216,7 +235,7 @@ const getIOCStats = async (req, res, next) => {
     ]);
 
     // Total count
-    const totalIOCs = await IOC.countDocuments({ isActive: true });
+    const totalIOCs = await IOC.countDocuments(commonMatch);
 
     res.status(200).json({
       success: true,
@@ -240,11 +259,11 @@ const getIOCStats = async (req, res, next) => {
 // Get a single IOC with full enrichment details
 const getIOCById = async (req, res, next) => {
   try {
-    const ioc = await IOC.findById(req.params.id)
+    const ioc = await IOC.findOne({ _id: req.params.id, submittedBy: req.user.userId })
       .populate('submittedBy', 'username email');
 
     if (!ioc) {
-      return res.status(404).json({ success: false, message: 'IOC not found' });
+      return res.status(404).json({ success: false, message: 'IOC not found or access denied' });
     }
 
     res.status(200).json({ success: true, data: ioc });
@@ -260,14 +279,14 @@ const getIOCById = async (req, res, next) => {
 // Only admin role can delete
 const deleteIOC = async (req, res, next) => {
   try {
-    const ioc = await IOC.findByIdAndUpdate(
-      req.params.id,
+    const ioc = await IOC.findOneAndUpdate(
+      { _id: req.params.id, submittedBy: req.user.userId },
       { $set: { isActive: false } },
       { new: true }
     );
 
     if (!ioc) {
-      return res.status(404).json({ success: false, message: 'IOC not found' });
+      return res.status(404).json({ success: false, message: 'IOC not found or access denied' });
     }
 
     logger.info(`IOC ${req.params.id} soft-deleted by ${req.user.username}`);
@@ -283,9 +302,9 @@ const deleteIOC = async (req, res, next) => {
 // Toggle false positive flag on an IOC
 const flagFalsePositive = async (req, res, next) => {
   try {
-    const ioc = await IOC.findById(req.params.id);
+    const ioc = await IOC.findOne({ _id: req.params.id, submittedBy: req.user.userId });
     if (!ioc) {
-      return res.status(404).json({ success: false, message: 'IOC not found' });
+      return res.status(404).json({ success: false, message: 'IOC not found or access denied' });
     }
 
     ioc.isFP = !ioc.isFP; // Toggle

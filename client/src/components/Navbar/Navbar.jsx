@@ -26,10 +26,21 @@ const Navbar = () => {
   }, []);
 
   const formatTime = (date) =>
-    date.toUTCString().slice(17, 25); // HH:MM:SS
+    date.toLocaleTimeString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour:     '2-digit',
+      minute:   '2-digit',
+      second:   '2-digit',
+      hour12:   false,
+    });
 
   const formatDate = (date) =>
-    date.toISOString().slice(0, 10); // YYYY-MM-DD
+    date.toLocaleDateString('en-IN', {
+      timeZone:  'Asia/Kolkata',
+      year:      'numeric',
+      month:     '2-digit',
+      day:       '2-digit',
+    }).split('/').reverse().join('-'); // YYYY-MM-DD
 
   return (
     <nav className="navbar">
@@ -69,7 +80,7 @@ const Navbar = () => {
       {/* ── Right: Clock + User ── */}
       <div className="navbar-right">
         <div className="navbar-clock">
-          <div className="clock-time">{formatTime(time)} UTC</div>
+          <div className="clock-time">{formatTime(time)} IST</div>
           <div className="clock-date">{formatDate(time)}</div>
         </div>
 

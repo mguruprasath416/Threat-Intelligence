@@ -118,9 +118,8 @@ const IOCSchema = new mongoose.Schema({
   toJSON: { virtuals: true },
 });
 
-// ── Compound Index ─────────────────────────────────────────
-// Makes searching "indicator + type" combination very fast
-IOCSchema.index({ indicator: 1, iocType: 1 }, { unique: true });
+// Makes searching "indicator + type + user" combination very fast and unique per user
+IOCSchema.index({ indicator: 1, iocType: 1, submittedBy: 1 }, { unique: true });
 
 // ── Text Index ─────────────────────────────────────────────
 // Enables full-text search across indicator and tags

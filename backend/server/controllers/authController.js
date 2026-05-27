@@ -101,7 +101,17 @@ const register = async (req, res, next) => {
     });
 
     logger.info(`New user registered: ${username} (${user.role})`);
-    sendTokenResponse(user, 201, res);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Account created successfully. Please sign in to continue.',
+      user: {
+        id:       user._id,
+        username: user.username,
+        email:    user.email,
+        role:     user.role,
+      },
+    });
 
   } catch (err) {
     // Mongoose duplicate key error
@@ -119,17 +129,22 @@ const register = async (req, res, next) => {
 // ── POST /api/auth/login ──────────────────────────────────
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required',
+        message: 'Username/Email and password are required',
       });
     }
 
-    // Explicitly select password — it's excluded by default (select: false)
-    const user = await User.findOne({ email }).select('+password');
+    // Allow login with either email or username
+    const user = await User.findOne({
+      $or: [
+        { email:    identifier.toLowerCase() },
+        { username: identifier },
+      ]
+    }).select('+password');
 
     if (!user) {
       // Intentionally vague error — don't reveal if email exists

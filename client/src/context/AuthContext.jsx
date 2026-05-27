@@ -1,19 +1,13 @@
 // ============================================================
-// context/AuthContext.jsx — GLOBAL AUTHENTICATION STATE
+// context/AuthContext.jsx — GLOBAL AUTH STATE
 // ============================================================
-// React Context provides global state without prop drilling.
-// This context manages the logged-in user's session.
+// Manages login session for the entire app.
 //
-// What it provides to the whole app:
-//   user        → current user object (null if not logged in)
-//   token       → JWT string
-//   login()     → save token + user after successful login
-//   logout()    → clear everything, redirect to /login
-//   isLoading   → true while checking stored token on startup
-//
-// Usage in any component:
-//   const { user, logout } = useContext(AuthContext);
-//   Or use the custom hook: const { user } = useAuth();
+// Session policy:
+//   - On every app load, any stored token is immediately cleared.
+//   - Users MUST log in every time they open the app.
+//   - Session only lives in memory while the tab is open.
+//   - Logging out also clears the backend cookie.
 // ============================================================
 
 import { createContext, useState, useEffect, useCallback } from 'react';
@@ -23,70 +17,47 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user,      setUser]      = useState(null);
-  const [token,     setToken]     = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // true until we check localStorage
+  const [isLoading, setIsLoading] = useState(true);
 
-  // ── Initialize: Restore session from localStorage ─────────
-  // On first mount, check if we have a stored token.
-  // If yes, verify it's still valid by calling /auth/me
+  // ── Always start fresh: clear any old session on app load ──
   useEffect(() => {
-    const initAuth = async () => {
-      const storedToken = localStorage.getItem('token');
-      const storedUser  = localStorage.getItem('user');
-
-      if (storedToken && storedUser) {
-        try {
-          // Verify token is still valid with the server
-          const response = await api.get('/auth/me');
-          setUser(response.data.data);
-          setToken(storedToken);
-        } catch {
-          // Token expired or invalid — clear storage
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
-      }
-
-      setIsLoading(false); // Done checking — render the app
-    };
-
-    initAuth();
-  }, []);
-
-  // ── Login ──────────────────────────────────────────────────
-  // Called after successful login API response
-  const login = useCallback((userData, jwtToken) => {
-    setUser(userData);
-    setToken(jwtToken);
-    localStorage.setItem('token', jwtToken);
-    localStorage.setItem('user', JSON.stringify(userData));
-  }, []);
-
-  // ── Logout ────────────────────────────────────────────────
-  const logout = useCallback(async () => {
-    try {
-      await api.post('/auth/logout'); // Clear server-side cookie
-    } catch { /* ignore errors */ }
-
-    setUser(null);
-    setToken(null);
+    // Clear any persisted token so users always go through the login page.
+    // Session is only active for the lifetime of the current browser tab.
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setUser(null);
+    setIsLoading(false);
+  }, []);
+
+  // ── Login: called after successful register or login ─────
+  const login = useCallback((userData, token) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  }, []);
+
+  // ── Logout: clears everything and redirects ───────────────
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // ignore errors — logout anyway
+    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
     window.location.href = '/login';
   }, []);
 
-  const value = {
-    user,
-    token,
-    isLoading,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    login,
-    logout,
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user,
+      isLoading,
+      isAuthenticated: !!user,
+      isAdmin:         user?.role === 'admin',
+      login,
+      logout,
+    }}>
       {children}
     </AuthContext.Provider>
   );
