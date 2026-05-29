@@ -12,7 +12,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://threat-intelligence-1-nryd.onrender.com',
         changeOrigin: true,
       },
     },
