@@ -1,0 +1,360 @@
+/* ============================================================
+   mobile.css — MOBILE RESPONSIVE STYLES
+   ============================================================
+   Add this to your globals.css or import in App.jsx
+   Handles screens below 768px (phones) and 1024px (tablets)
+   ============================================================ */
+
+/* ── Tablet (max 1024px) ─────────────────────────────────── */
+@media (max-width: 1024px) {
+
+  /* Sidebar becomes hidden by default on tablet */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1100;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Main content takes full width */
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  /* Charts go single column */
+  .charts-row-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* KPI grid becomes 2 columns */
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ── Mobile (max 768px) ──────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Navbar adjustments */
+  .navbar {
+    padding: 0 var(--space-md);
+  }
+
+  /* Hide status indicators on small screens */
+  .navbar-status {
+    display: none;
+  }
+
+  /* Smaller brand text */
+  .brand-name {
+    font-size: 13px;
+    letter-spacing: 0.1em;
+  }
+
+  .brand-sub {
+    display: none;
+  }
+
+  /* Clock compact */
+  .navbar-clock {
+    display: none;
+  }
+
+  /* User info compact */
+  .user-info {
+    display: none;
+  }
+
+  /* Hamburger menu button */
+  .hamburger-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--cyan);
+    font-size: 18px;
+    cursor: pointer;
+    margin-right: var(--space-sm);
+  }
+
+  /* Overlay when sidebar opens */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1050;
+  }
+
+  .sidebar-overlay.visible {
+    display: block;
+  }
+
+  /* Pages padding */
+  .dashboard-page,
+  .search-page,
+  .feed-page,
+  .reports-page,
+  .ioc-details-page {
+    padding: var(--space-md);
+    gap: var(--space-md);
+  }
+
+  /* Page title smaller */
+  .page-title {
+    font-size: 18px;
+  }
+
+  /* Page header stack vertically */
+  .page-header {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* KPI single column on mobile */
+  .grid-4,
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--space-sm);
+  }
+
+  /* Stat card compact */
+  .stat-value {
+    font-size: 24px;
+  }
+
+  .stat-card {
+    padding: var(--space-md);
+  }
+
+  /* IOC Search input */
+  .search-input-wrapper {
+    flex-wrap: wrap;
+  }
+
+  .search-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .type-badge {
+    margin: 4px 8px;
+  }
+
+  /* ThreatCard adjustments */
+  .tc-header {
+    flex-direction: column;
+  }
+
+  .tc-header-right {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .api-scores-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Table horizontal scroll */
+  .threat-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 600px;
+  }
+
+  /* Filter bar stack */
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-select,
+  .filter-input {
+    width: 100% !important;
+  }
+
+  /* Table header stack */
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Login card full width */
+  .login-card {
+    width: 95% !important;
+    padding: var(--space-lg);
+  }
+
+  /* Feed stats 2 columns */
+  .feed-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Reports grid single column */
+  .reports-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Pagination compact */
+  .table-pagination {
+    flex-direction: column;
+    gap: var(--space-sm);
+    align-items: center;
+  }
+
+  /* MITRE item stack */
+  .mitre-item {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* Geo grid 2 columns */
+  .geo-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Breadcrumb compact */
+  .breadcrumb-current {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Example questions grid */
+  .examples-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tags overflow */
+  .tags-list {
+    max-height: 80px;
+    overflow-y: auto;
+  }
+}
+
+/* ── Small Mobile (max 480px) ────────────────────────────── */
+@media (max-width: 480px) {
+
+  .grid-4,
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .feed-stats {
+    grid-template-columns: 1fr !important;
+  }
+
+  .brand-name {
+    font-size: 11px;
+  }
+
+  .page-title {
+    font-size: 16px;
+  }
+
+  .navbar-height {
+    height: 50px;
+  }
+
+  .tc-indicator {
+    font-size: 12px;
+  }
+}
+
+/* ── Sidebar Mobile Additions ────────────────────────────── */
+
+/* Close button inside sidebar — mobile only */
+.sidebar-close-btn {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  z-index: 10;
+}
+
+.sidebar-close-btn:hover {
+  color: var(--red);
+  border-color: rgba(255,51,85,0.4);
+}
+
+@media (max-width: 1024px) {
+  /* Show hamburger on tablet/mobile */
+  .hamburger-btn {
+    display: flex !important;
+  }
+
+  /* Show close button inside sidebar */
+  .sidebar-close-btn {
+    display: flex !important;
+  }
+
+  /* Sidebar slides in from left */
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Full height overlay */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1050;
+    backdrop-filter: blur(2px);
+  }
+
+  .sidebar-overlay.visible {
+    display: block;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Main content full width */
+  .main-content {
+    margin-left: 0 !important;
+  }
+}
+
+/* ── Navbar Left Group ───────────────────────────────────── */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}

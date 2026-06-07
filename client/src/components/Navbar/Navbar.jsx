@@ -1,65 +1,58 @@
 // ============================================================
-// components/Navbar/Navbar.jsx — TOP NAVIGATION BAR
-// ============================================================
-// Fixed top bar showing:
-//   - Logo / system name with blinking cursor
-//   - Live clock (updates every second)
-//   - System status indicators
-//   - User info + logout button
-//
-// Stays on screen at all times — content scrolls beneath it.
+// components/Navbar/Navbar.jsx — WITH MOBILE HAMBURGER MENU
 // ============================================================
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import './Navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ onMenuToggle, sidebarOpen }) => {
   const { user, logout } = useAuth();
   const [time, setTime] = useState(new Date());
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // Live clock — updates every second
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (date) =>
-    date.toLocaleTimeString('en-IN', {
-      timeZone: 'Asia/Kolkata',
-      hour:     '2-digit',
-      minute:   '2-digit',
-      second:   '2-digit',
-      hour12:   false,
-    });
-
-  const formatDate = (date) =>
-    date.toLocaleDateString('en-IN', {
-      timeZone:  'Asia/Kolkata',
-      year:      'numeric',
-      month:     '2-digit',
-      day:       '2-digit',
-    }).split('/').reverse().join('-'); // YYYY-MM-DD
+  const formatTime = (date) => date.toUTCString().slice(17, 25);
+  const formatDate = (date) => date.toISOString().slice(0, 10);
 
   return (
     <nav className="navbar">
-      {/* ── Left: Logo ── */}
-      <div className="navbar-brand">
-        <div className="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <polygon points="12,2 22,8 22,16 12,22 2,16 2,8" stroke="#00d4ff" strokeWidth="1.5" fill="none"/>
-            <polygon points="12,6 18,9.5 18,14.5 12,18 6,14.5 6,9.5" stroke="#00d4ff" strokeWidth="1" fill="rgba(0,212,255,0.1)"/>
-            <circle cx="12" cy="12" r="2" fill="#00d4ff"/>
-          </svg>
-        </div>
-        <div className="brand-text">
-          <span className="brand-name">IOC SENTINEL</span>
-          <span className="brand-sub">Threat Intelligence Platform</span>
+
+      {/* ── Left: Hamburger + Logo ── */}
+      <div className="navbar-left">
+        {/* Hamburger button — only visible on mobile */}
+        <button
+          className="hamburger-btn"
+          onClick={onMenuToggle}
+          aria-label="Toggle menu"
+          style={{ display: 'none' }} // shown via CSS media query
+        >
+          {sidebarOpen ? '✕' : '☰'}
+        </button>
+
+        <div className="navbar-brand">
+          <div className="brand-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <polygon points="12,2 22,8 22,16 12,22 2,16 2,8"
+                stroke="#00d4ff" strokeWidth="1.5" fill="none"/>
+              <polygon points="12,6 18,9.5 18,14.5 12,18 6,14.5 6,9.5"
+                stroke="#00d4ff" strokeWidth="1"
+                fill="rgba(0,212,255,0.1)"/>
+              <circle cx="12" cy="12" r="2" fill="#00d4ff"/>
+            </svg>
+          </div>
+          <div className="brand-text">
+            <span className="brand-name">IOC SENTINEL</span>
+            <span className="brand-sub">Threat Intelligence Platform</span>
+          </div>
         </div>
       </div>
 
-      {/* ── Center: Status Indicators ── */}
+      {/* ── Center: Status ── */}
       <div className="navbar-status">
         <div className="status-item">
           <span className="status-dot online"></span>
@@ -80,17 +73,20 @@ const Navbar = () => {
       {/* ── Right: Clock + User ── */}
       <div className="navbar-right">
         <div className="navbar-clock">
-          <div className="clock-time">{formatTime(time)} IST</div>
+          <div className="clock-time">{formatTime(time)} UTC</div>
           <div className="clock-date">{formatDate(time)}</div>
         </div>
 
-        <div className="navbar-user" onClick={() => setShowUserMenu(p => !p)}>
+        <div className="navbar-user"
+          onClick={() => setShowUserMenu(p => !p)}>
           <div className="user-avatar">
             {user?.username?.[0]?.toUpperCase() || 'A'}
           </div>
           <div className="user-info">
             <span className="user-name">{user?.username || 'Analyst'}</span>
-            <span className="user-role">{user?.role?.toUpperCase() || 'ANALYST'}</span>
+            <span className="user-role">
+              {user?.role?.toUpperCase() || 'ANALYST'}
+            </span>
           </div>
           <span className="chevron">▾</span>
 

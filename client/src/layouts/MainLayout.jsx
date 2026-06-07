@@ -1,31 +1,55 @@
 // ============================================================
-// layouts/MainLayout.jsx — AUTHENTICATED APP SHELL
+// layouts/MainLayout.jsx — WITH MOBILE SIDEBAR TOGGLE
 // ============================================================
-// Wraps all authenticated pages with Navbar + Sidebar.
-// The main content area sits to the right of the sidebar,
-// below the navbar.
-//
-// Layout structure:
-//   <Navbar />                     ← fixed top bar (60px)
-//   <Sidebar />                    ← fixed left sidebar (240px)
-//   <main className="content">     ← scrollable content area
-//     <Outlet />                   ← current page renders here
-//   </main>
+// On desktop: sidebar always visible
+// On mobile:  sidebar hidden, opens via hamburger button
 // ============================================================
 
-import { Outlet } from 'react-router-dom';
-import Navbar     from '../components/Navbar/Navbar';
-import Sidebar    from '../components/Sidebar/Sidebar';
+import { useState, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import Navbar  from '../components/Navbar/Navbar';
+import Sidebar from '../components/Sidebar/Sidebar';
 import './MainLayout.css';
 
-const MainLayout = () => (
-  <div className="app-shell">
-    <Navbar />
-    <Sidebar />
-    <main className="main-content">
-      <Outlet />
-    </main>
-  </div>
-);
+const MainLayout = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  // Close sidebar on route change (mobile UX)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Close sidebar when clicking outside (overlay)
+  const handleOverlayClick = () => {
+    setSidebarOpen(false);
+  };
+
+  return (
+    <div className="app-shell">
+
+      {/* Top navbar with hamburger */}
+      <Navbar
+        onMenuToggle={() => setSidebarOpen(p => !p)}
+        sidebarOpen={sidebarOpen}
+      />
+
+      {/* Dark overlay — appears behind sidebar on mobile */}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
+        onClick={handleOverlayClick}
+      />
+
+      {/* Sidebar — slides in on mobile */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* Main content */}
+      <main className="main-content">
+        <Outlet />
+      </main>
+
+    </div>
+  );
+};
 
 export default MainLayout;
