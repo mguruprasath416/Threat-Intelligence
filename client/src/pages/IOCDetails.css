@@ -16,6 +16,10 @@
 .breadcrumb-sep   { color: var(--text-dim); }
 .breadcrumb-current { color: var(--text-secondary); }
 
+.details-actions {
+  margin-bottom: var(--space-md);
+}
+
 .details-error {
   text-align: center;
   padding: var(--space-2xl);
@@ -35,7 +39,6 @@
 }
 
 /* Raw JSON */
-.raw-section {}
 .raw-header {
   display: flex;
   justify-content: space-between;

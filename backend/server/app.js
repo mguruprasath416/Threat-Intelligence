@@ -7,6 +7,11 @@ const morgan  = require('morgan');
 const iocRoutes    = require('./routes/iocRoutes');
 const authRoutes   = require('./routes/authRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const actorRoutes  = require('./routes/actorRoutes');
+const taxiiRoutes  = require('./routes/taxiiRoutes');
+const watchlistRoutes = require('./routes/watchlistRoutes');
+const alertRoutes = require('./routes/alertRoutes');
+const huntRoutes   = require('./routes/huntRoutes');
 
 const errorMiddleware     = require('./middleware/errorMiddleware');
 const rateLimitMiddleware = require('./middleware/rateLimitMiddleware');
@@ -43,6 +48,11 @@ app.get('/health', (req, res) => {
 app.use('/api/ioc',     iocRoutes);
 app.use('/api/auth',    authRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/actors',  actorRoutes);
+app.use('/api/taxii',   taxiiRoutes);
+app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/alerts',  alertRoutes);
+app.use('/api/hunt',    huntRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });

@@ -16,6 +16,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useIOC }       from '../hooks/useIOC';
 import ThreatTable      from '../components/ThreatTable/ThreatTable';
 import Loader           from '../components/Loader/Loader';
+import api              from '../api/axios';
 import './ThreatFeed.css';
 
 // Marquee ticker showing recent critical/high IOCs
@@ -56,9 +57,14 @@ const ThreatFeed = () => {
     isActive: true,
   });
 
-  const [secondsAgo, setSecondsAgo] = useState(0);
-  const refreshTimer = useRef(null);
-  const clockTimer   = useRef(null);
+  const [secondsAgo, setSecondsAgo]     = useState(0);
+  const refreshTimer                     = useRef(null);
+  const clockTimer                       = useRef(null);
+
+  // ── STIX Export state ────────────────────────────────────
+  const [exportCollection, setExportCollection] = useState('ioc-sentinel-all');
+  const [exportLoading, setExportLoading]       = useState(false);
+  const [exportError, setExportError]           = useState('');
 
   // Auto-refresh every 30 seconds
   const doRefresh = () => {
@@ -75,6 +81,38 @@ const ThreatFeed = () => {
       clearInterval(clockTimer.current);
     };
   }, [filters.page, filters.source]);
+
+  // ── STIX Bundle Download ──────────────────────────────────
+  // Calls /api/taxii/export/:collectionId with auth header,
+  // receives the STIX bundle JSON, and saves it as a .json file
+  // via a temporary <a> element (no server-side file storage needed).
+  const handleStixExport = async () => {
+    setExportLoading(true);
+    setExportError('');
+    try {
+      const response = await api.get(
+        `/taxii/export/${exportCollection}`,
+        { responseType: 'blob' }   // receive raw bytes so we can save as file
+      );
+
+      // Build a temporary URL from the blob and click it
+      const blob     = new Blob([response.data], { type: 'application/json' });
+      const url      = URL.createObjectURL(blob);
+      const link     = document.createElement('a');
+      const filename = `stix-bundle-${exportCollection}-${Date.now()}.json`;
+      link.href      = url;
+      link.download  = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(err.userMessage || 'Export failed — check console');
+      console.error('STIX export error:', err);
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   // Stats from current IOC list
   const now           = Date.now();
@@ -109,6 +147,40 @@ const ThreatFeed = () => {
           <button className="btn btn-primary" onClick={doRefresh}>
             ↻ REFRESH NOW
           </button>
+
+          {/* ── STIX / TAXII Export Panel ─────────────────── */}
+          <div className="stix-export-wrapper">
+            <div className="stix-export-group">
+              <select
+                id="stix-collection-select"
+                className="filter-select"
+                value={exportCollection}
+                onChange={e => setExportCollection(e.target.value)}
+                disabled={exportLoading}
+              >
+                <option value="ioc-sentinel-all">All IOCs</option>
+                <option value="ioc-sentinel-critical">Critical &amp; High</option>
+              </select>
+              <button
+                id="stix-export-btn"
+                className={`btn btn-stix ${exportLoading ? 'loading' : ''}`}
+                onClick={handleStixExport}
+                disabled={exportLoading}
+                title="Download STIX 2.1 bundle (.json) for TAXII clients, OpenCTI, MISP, etc."
+              >
+                {exportLoading ? (
+                  <><span className="stix-spinner" /> EXPORTING…</>
+                ) : (
+                  <><span className="stix-icon">⬡</span> STIX 2.1 EXPORT</>
+                )}
+              </button>
+            </div>
+
+            {/* Inline error message below the export row */}
+            {exportError && (
+              <div className="stix-export-error">{exportError}</div>
+            )}
+          </div>
         </div>
       </div>
 

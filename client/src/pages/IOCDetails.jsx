@@ -61,6 +61,13 @@ const IOCDetails = () => {
         <span className="breadcrumb-current mono">{ioc?.indicator}</span>
       </div>
 
+      {/* ── Action Buttons ── */}
+      <div className="details-actions">
+        <button className="btn btn-primary" onClick={() => navigate(`/graph/${id}`)}>
+          View Relationship Graph
+        </button>
+      </div>
+
       {/* ── Main Card ── */}
       <ThreatCard ioc={ioc} />
 

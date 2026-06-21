@@ -1,0 +1,359 @@
+/* ============================================================
+   MitreHeatmap.css — ATT&CK HEATMAP STYLES
+   ============================================================ */
+
+.mitre-heatmap {
+  background: var(--bg-panel, #0F1923);
+  border: 1px solid var(--border, #1E2D40);
+  border-radius: 12px;
+  padding: 1.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.mitre-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.mitre-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.mitre-title h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #E8EDF5);
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.mitre-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  background: rgba(0, 212, 180, 0.15);
+  border: 1px solid rgba(0, 212, 180, 0.4);
+  color: #00D4B4;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.mitre-meta {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.mitre-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mstat-val {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #00D4B4;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+}
+
+.mstat-label {
+  font-size: 0.65rem;
+  color: var(--text-muted, #8A9BB0);
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+/* ── Coverage Bar ────────────────────────────────────────── */
+.mitre-coverage-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.mitre-coverage-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.mitre-coverage-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00A896, #00D4B4);
+  border-radius: 99px;
+  transition: width 0.8s ease;
+}
+
+.mitre-coverage-label {
+  font-size: 0.65rem;
+  color: var(--text-muted, #8A9BB0);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+/* ── Grid ────────────────────────────────────────────────── */
+.mitre-grid-scroll {
+  overflow-x: auto;
+  margin: 0 -0.25rem;
+  padding-bottom: 0.5rem;
+}
+
+.mitre-grid-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.mitre-grid-scroll::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+}
+.mitre-grid-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 180, 0.3);
+  border-radius: 4px;
+}
+
+.mitre-grid {
+  display: flex;
+  gap: 4px;
+  min-width: max-content;
+  padding: 0 0.25rem;
+  align-items: stretch;
+}
+
+.mitre-column {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 70px;
+  flex: 1;
+  align-items: stretch;
+}
+
+/* ── Tactic Header ───────────────────────────────────────── */
+.mitre-tactic-header {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px 4px 0 0;
+  padding: 4px 3px;
+  text-align: center;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.mitre-tactic-header.has-hits {
+  background: rgba(0, 212, 180, 0.08);
+  border-color: rgba(0, 212, 180, 0.2);
+}
+
+.tactic-short {
+  display: block;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted, #8A9BB0);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.mitre-tactic-header.has-hits .tactic-short {
+  color: #00D4B4;
+}
+
+.tactic-count {
+  display: inline-block;
+  font-size: 0.55rem;
+  background: rgba(0, 212, 180, 0.2);
+  color: #00D4B4;
+  border-radius: 3px;
+  padding: 0 3px;
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Cells ───────────────────────────────────────────────── */
+.mitre-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: stretch;
+}
+
+.mitre-cell {
+  height: 32px;
+  border-radius: 3px;
+  position: relative;
+  cursor: default;
+  transition: transform 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+.mitre-cell.empty {
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.06);
+}
+
+.mitre-cell.filled {
+  background: var(--cell-color, #1E7A68);
+  border: 1px solid color-mix(in srgb, var(--cell-color, #1E7A68) 60%, white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.mitre-cell.filled:hover,
+.mitre-cell.filled.hovered {
+  transform: scale(1.15) translateY(-2px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--cell-color, #1E7A68) 50%, transparent);
+  z-index: 10;
+}
+
+.cell-id {
+  font-size: 0.48rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: rgba(255,255,255,0.9);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ── Tooltip ─────────────────────────────────────────────── */
+.cell-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0A1520;
+  border: 1px solid rgba(0, 212, 180, 0.4);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  min-width: 160px;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+.mitre-cell.filled:hover .cell-tooltip,
+.mitre-cell.filled.hovered .cell-tooltip {
+  opacity: 1;
+}
+
+.tooltip-id {
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: #00D4B4;
+  margin-bottom: 2px;
+}
+
+.tooltip-name {
+  font-size: 0.72rem;
+  color: #E8EDF5;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.tooltip-tactic {
+  font-size: 0.62rem;
+  color: #8A9BB0;
+  margin-bottom: 2px;
+}
+
+.tooltip-count {
+  font-size: 0.65rem;
+  color: #F5A623;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Legend ──────────────────────────────────────────────── */
+.mitre-legend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+
+.legend-label {
+  font-size: 0.65rem;
+  color: var(--text-muted, #8A9BB0);
+  letter-spacing: 0.08em;
+  margin-right: 0.25rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  color: var(--text-muted, #8A9BB0);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.mitre-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  background: var(--bg-panel, #0F1923);
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 12px;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.mitre-empty-icon {
+  font-size: 2rem;
+  color: rgba(255,255,255,0.15);
+}
+
+.mitre-empty p {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #8A9BB0);
+}
+
+.mitre-empty span {
+  font-size: 0.72rem;
+  color: rgba(138, 155, 176, 0.6);
+}
+
+/* ── Compact mode ────────────────────────────────────────── */
+.mitre-heatmap.compact {
+  padding: 1rem;
+}
+
+.mitre-heatmap.compact .mitre-column {
+  min-width: 44px;
+}
+
+.mitre-heatmap.compact .mitre-cell {
+  height: 24px;
+}
+
+.mitre-heatmap.compact .cell-id {
+  font-size: 0.4rem;
+}

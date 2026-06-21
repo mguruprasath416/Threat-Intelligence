@@ -21,9 +21,13 @@
 // ============================================================
 
 const IOC              = require('../models/IOC');
+const ThreatActor      = require('../models/ThreatActor');
 const { enrichIOC }    = require('../services/enrichmentService');
 const { validateIOC }  = require('../utils/iocValidator');
 const logger           = require('../utils/logger');
+const csv              = require('csv-parser');
+const fs               = require('fs');
+const { Readable }     = require('stream');
 
 // ── POST /api/ioc/search ──────────────────────────────────
 // Main endpoint — takes an indicator, enriches it, saves to DB
@@ -324,6 +328,573 @@ const flagFalsePositive = async (req, res, next) => {
   }
 };
 
+// ── GET /api/ioc/mitre/coverage ───────────────────────────
+// Aggregates counts of active mapped MITRE techniques
+const getMitreCoverage = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    const coverage = await IOC.aggregate([
+      // 1. Only count active IOCs owned by the user
+      { $match: { isActive: true, submittedBy: userId } },
+      // 2. Unwind the mitreTechniques subdocument array
+      { $unwind: '$mitreTechniques' },
+      // 3. Group by technique ID and sum occurrences
+      {
+        $group: {
+          _id: '$mitreTechniques.techniqueId',
+          techniqueId:   { $first: '$mitreTechniques.techniqueId' },
+          techniqueName: { $first: '$mitreTechniques.techniqueName' },
+          tactic:        { $first: '$mitreTechniques.tactic' },
+          killChainStage:{ $first: '$mitreTechniques.killChainStage' },
+          count:         { $sum: 1 },
+        }
+      },
+      // 4. Sort by count descending
+      { $sort: { count: -1 } }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: coverage
+    });
+  } catch (err) {
+    logger.error(`getMitreCoverage error: ${err.message}`);
+    next(err);
+  }
+};
+
+
+// ── PATCH /api/ioc/:id/mitre ──────────────────────────────
+// Update the MITRE ATT&CK technique mappings for an IOC
+const updateMitreTechniques = async (req, res, next) => {
+  try {
+    const { mitreTechniques } = req.body;
+
+    if (!Array.isArray(mitreTechniques)) {
+      return res.status(400).json({
+        success: false,
+        message: 'mitreTechniques must be an array',
+      });
+    }
+
+    const ioc = await IOC.findOneAndUpdate(
+      { _id: req.params.id, submittedBy: req.user.userId },
+      { $set: { mitreTechniques } },
+      { new: true, runValidators: true }
+    );
+
+    if (!ioc) {
+      return res.status(404).json({
+        success: false,
+        message: 'IOC not found or not owned by you',
+      });
+    }
+
+    logger.info(`MITRE techniques updated for IOC ${ioc._id} by ${req.user.username}`);
+    res.status(200).json({ success: true, data: ioc });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── GET /api/ioc/graph/:id ───────────────────────────────────
+// Returns nodes and edges for relationship graph visualization
+// Traverses related IOCs through tags, threat actors, and similar indicators
+const getGraphData = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const maxDepth = 2; // How many levels deep to traverse
+    const maxNodes = 50; // Limit total nodes to prevent performance issues
+
+    // Get the starting IOC
+    const startIOC = await IOC.findOne({ _id: id, submittedBy: userId });
+    if (!startIOC) {
+      return res.status(404).json({ success: false, message: 'IOC not found' });
+    }
+
+    const nodes = new Map();
+    const edges = [];
+    const visited = new Set();
+    const queue = [{ ioc: startIOC, depth: 0 }];
+
+    // Add starting node
+    nodes.set(startIOC._id.toString(), {
+      id: startIOC._id.toString(),
+      label: startIOC.indicator,
+      type: 'ioc',
+      iocType: startIOC.iocType,
+      severity: startIOC.severity,
+      threatScore: startIOC.threatScore,
+      data: startIOC
+    });
+    visited.add(startIOC._id.toString());
+
+    // BFS traversal to find related IOCs
+    while (queue.length > 0 && nodes.size < maxNodes) {
+      const { ioc, depth } = queue.shift();
+
+      if (depth >= maxDepth) continue;
+
+      // Find IOCs with same tags
+      if (ioc.tags && ioc.tags.length > 0) {
+        const relatedByTags = await IOC.find({
+          _id: { $ne: ioc._id },
+          submittedBy: userId,
+          isActive: true,
+          tags: { $in: ioc.tags }
+        }).limit(10);
+
+        for (const related of relatedByTags) {
+          const relatedId = related._id.toString();
+          if (!visited.has(relatedId) && nodes.size < maxNodes) {
+            visited.add(relatedId);
+            nodes.set(relatedId, {
+              id: relatedId,
+              label: related.indicator,
+              type: 'ioc',
+              iocType: related.iocType,
+              severity: related.severity,
+              threatScore: related.threatScore,
+              data: related
+            });
+            queue.push({ ioc: related, depth: depth + 1 });
+          }
+          if (visited.has(relatedId)) {
+            edges.push({
+              source: ioc._id.toString(),
+              target: relatedId,
+              label: 'shared tag',
+              type: 'tag'
+            });
+          }
+        }
+      }
+
+      // Find IOCs with same MITRE techniques
+      if (ioc.mitreTechniques && ioc.mitreTechniques.length > 0) {
+        const techniqueIds = ioc.mitreTechniques.map(t => t.techniqueId);
+        const relatedByMitre = await IOC.find({
+          _id: { $ne: ioc._id },
+          submittedBy: userId,
+          isActive: true,
+          'mitreTechniques.techniqueId': { $in: techniqueIds }
+        }).limit(10);
+
+        for (const related of relatedByMitre) {
+          const relatedId = related._id.toString();
+          if (!visited.has(relatedId) && nodes.size < maxNodes) {
+            visited.add(relatedId);
+            nodes.set(relatedId, {
+              id: relatedId,
+              label: related.indicator,
+              type: 'ioc',
+              iocType: related.iocType,
+              severity: related.severity,
+              threatScore: related.threatScore,
+              data: related
+            });
+            queue.push({ ioc: related, depth: depth + 1 });
+          }
+          if (visited.has(relatedId)) {
+            edges.push({
+              source: ioc._id.toString(),
+              target: relatedId,
+              label: 'MITRE technique',
+              type: 'mitre'
+            });
+          }
+        }
+      }
+
+      // Find threat actors linked to this IOC
+      const threatActors = await ThreatActor.find({
+        linkedIOCs: ioc._id,
+        isActive: true
+      }).populate('linkedIOCs', 'indicator iocType severity threatScore');
+
+      for (const actor of threatActors) {
+        const actorId = actor._id.toString();
+        if (!visited.has(actorId) && nodes.size < maxNodes) {
+          visited.add(actorId);
+          nodes.set(actorId, {
+            id: actorId,
+            label: actor.name,
+            type: 'threat_actor',
+            data: actor
+          });
+        }
+
+        // Add edge from IOC to threat actor
+        edges.push({
+          source: ioc._id.toString(),
+          target: actorId,
+          label: 'attributed to',
+          type: 'attribution'
+        });
+
+        // Add edges from threat actor to other linked IOCs
+        for (const linkedIOC of actor.linkedIOCs || []) {
+          const linkedId = linkedIOC._id.toString();
+          if (linkedId !== ioc._id.toString()) {
+            if (!visited.has(linkedId) && nodes.size < maxNodes) {
+              visited.add(linkedId);
+              nodes.set(linkedId, {
+                id: linkedId,
+                label: linkedIOC.indicator,
+                type: 'ioc',
+                iocType: linkedIOC.iocType,
+                severity: linkedIOC.severity,
+                threatScore: linkedIOC.threatScore,
+                data: linkedIOC
+              });
+              queue.push({ ioc: linkedIOC, depth: depth + 1 });
+            }
+            if (visited.has(linkedId)) {
+              edges.push({
+                source: actorId,
+                target: linkedId,
+                label: 'uses',
+                type: 'attribution'
+              });
+            }
+          }
+        }
+      }
+
+      // Find IOCs with similar indicators (same domain for IPs, same IP for domains)
+      if (ioc.iocType === 'domain') {
+        // Find IPs that resolve to this domain (simplified - in real app, use DNS data)
+        const relatedByDomain = await IOC.find({
+          _id: { $ne: ioc._id },
+          submittedBy: userId,
+          isActive: true,
+          iocType: 'ip',
+          indicator: { $regex: ioc.indicator, $options: 'i' }
+        }).limit(5);
+
+        for (const related of relatedByDomain) {
+          const relatedId = related._id.toString();
+          if (!visited.has(relatedId) && nodes.size < maxNodes) {
+            visited.add(relatedId);
+            nodes.set(relatedId, {
+              id: relatedId,
+              label: related.indicator,
+              type: 'ioc',
+              iocType: related.iocType,
+              severity: related.severity,
+              threatScore: related.threatScore,
+              data: related
+            });
+            queue.push({ ioc: related, depth: depth + 1 });
+          }
+          if (visited.has(relatedId)) {
+            edges.push({
+              source: ioc._id.toString(),
+              target: relatedId,
+              label: 'related indicator',
+              type: 'indicator'
+            });
+          }
+        }
+      }
+    }
+
+    // Add campaign nodes from threat actors
+    for (const [nodeId, node] of nodes) {
+      if (node.type === 'threat_actor' && node.data.campaigns) {
+        for (const campaign of node.data.campaigns) {
+          const campaignId = `campaign-${nodeId}-${campaign.name}`;
+          if (!visited.has(campaignId) && nodes.size < maxNodes) {
+            visited.add(campaignId);
+            nodes.set(campaignId, {
+              id: campaignId,
+              label: campaign.name,
+              type: 'campaign',
+              data: campaign
+            });
+            edges.push({
+              source: nodeId,
+              target: campaignId,
+              label: 'campaign',
+              type: 'campaign'
+            });
+          }
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        nodes: Array.from(nodes.values()),
+        edges: edges
+      }
+    });
+
+  } catch (err) {
+    logger.error(`getGraphData error: ${err.message}`);
+    next(err);
+  }
+};
+
+// ── POST /api/ioc/bulk-import ───────────────────────────────
+// Bulk import IOCs from CSV or JSON file upload
+// Validates each row with iocValidator.js and returns a report
+const bulkImportIOCs = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const results = {
+      total: 0,
+      successful: 0,
+      failed: 0,
+      skipped: 0,
+      errors: []
+    };
+
+    let iocsToInsert = [];
+
+    // Parse CSV file
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      const stream = fs.createReadStream(file.path);
+      
+      await new Promise((resolve, reject) => {
+        stream
+          .pipe(csv())
+          .on('data', (row) => {
+            results.total++;
+            const indicator = row.indicator || row.Indicator || row.INDICATOR;
+            const tags = row.tags || row.Tags || row.TAGS || '';
+            const severity = row.severity || row.Severity || row.SEVERITY || 'Low';
+
+            if (!indicator) {
+              results.failed++;
+              results.errors.push({
+                row: results.total,
+                indicator: 'N/A',
+                error: 'Missing indicator field'
+              });
+              return;
+            }
+
+            // Validate IOC
+            const validation = validateIOC(indicator.trim());
+            if (!validation.valid) {
+              results.failed++;
+              results.errors.push({
+                row: results.total,
+                indicator: indicator.trim(),
+                error: validation.error
+              });
+              return;
+            }
+
+            // Check if IOC already exists for this user
+            IOC.findOne({
+              indicator: indicator.trim(),
+              iocType: validation.type,
+              submittedBy: userId
+            }).then(existing => {
+              if (existing) {
+                results.skipped++;
+              } else {
+                iocsToInsert.push({
+                  indicator: indicator.trim(),
+                  iocType: validation.type,
+                  severity: severity || 'Low',
+                  tags: tags ? tags.split(',').map(t => t.trim()) : [],
+                  source: 'bulk-import',
+                  submittedBy: userId,
+                  isActive: true,
+                  isFP: false
+                });
+              }
+            }).catch(err => {
+              results.failed++;
+              results.errors.push({
+                row: results.total,
+                indicator: indicator.trim(),
+                error: 'Database check failed'
+              });
+            });
+          })
+          .on('end', async () => {
+            // Insert valid IOCs
+            if (iocsToInsert.length > 0) {
+              try {
+                const inserted = await IOC.insertMany(iocsToInsert);
+                results.successful = inserted.length;
+              } catch (err) {
+                logger.error(`Bulk insert error: ${err.message}`);
+                results.failed += iocsToInsert.length;
+                results.errors.push({
+                  error: 'Bulk insert failed',
+                  details: err.message
+                });
+              }
+            }
+
+            // Clean up uploaded file
+            fs.unlinkSync(file.path);
+            resolve();
+          })
+          .on('error', (err) => {
+            logger.error(`CSV parsing error: ${err.message}`);
+            reject(err);
+          });
+      });
+
+    } else if (file.mimetype === 'application/json' || file.originalname.endsWith('.json')) {
+      // Parse JSON file
+      const jsonData = JSON.parse(fs.readFileSync(file.path, 'utf8'));
+      const iocsArray = Array.isArray(jsonData) ? jsonData : jsonData.iocs || [];
+
+      results.total = iocsArray.length;
+
+      for (let i = 0; i < iocsArray.length; i++) {
+        const item = iocsArray[i];
+        const indicator = item.indicator || item.Indicator || item.INDICATOR;
+        const tags = item.tags || item.Tags || item.TAGS || '';
+        const severity = item.severity || item.Severity || item.SEVERITY || 'Low';
+
+        if (!indicator) {
+          results.failed++;
+          results.errors.push({
+            row: i + 1,
+            indicator: 'N/A',
+            error: 'Missing indicator field'
+          });
+          continue;
+        }
+
+        // Validate IOC
+        const validation = validateIOC(indicator.trim());
+        if (!validation.valid) {
+          results.failed++;
+          results.errors.push({
+            row: i + 1,
+            indicator: indicator.trim(),
+            error: validation.error
+          });
+          continue;
+        }
+
+        // Check if IOC already exists for this user
+        const existing = await IOC.findOne({
+          indicator: indicator.trim(),
+          iocType: validation.type,
+          submittedBy: userId
+        });
+
+        if (existing) {
+          results.skipped++;
+        } else {
+          iocsToInsert.push({
+            indicator: indicator.trim(),
+            iocType: validation.type,
+            severity: severity || 'Low',
+            tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : [],
+            source: 'bulk-import',
+            submittedBy: userId,
+            isActive: true,
+            isFP: false
+          });
+        }
+      }
+
+      // Insert valid IOCs
+      if (iocsToInsert.length > 0) {
+        const inserted = await IOC.insertMany(iocsToInsert);
+        results.successful = inserted.length;
+      }
+
+      // Clean up uploaded file
+      fs.unlinkSync(file.path);
+
+    } else {
+      fs.unlinkSync(file.path);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid file format. Please upload CSV or JSON.' 
+      });
+    }
+
+    logger.info(`Bulk import completed for user ${userId}: ${results.successful} successful, ${results.failed} failed, ${results.skipped} skipped`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Bulk import completed',
+      data: results
+    });
+
+  } catch (err) {
+    // Clean up file on error
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    logger.error(`bulkImportIOCs error: ${err.message}`);
+    next(err);
+  }
+};
+
+// ── GET /api/ioc/export ──────────────────────────────────────
+// Export IOCs to CSV with optional filtering
+const exportIOCs = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const {
+      severity,
+      iocType,
+      search,
+      isActive = true
+    } = req.query;
+
+    // Build filter
+    const filter = {
+      isActive: isActive === 'true' || isActive === true,
+      submittedBy: userId
+    };
+
+    if (severity) filter.severity = severity;
+    if (iocType) filter.iocType = iocType;
+    if (search) filter.indicator = { $regex: search, $options: 'i' };
+
+    // Fetch IOCs
+    const iocs = await IOC.find(filter)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Convert to CSV
+    const csvHeader = 'indicator,iocType,severity,threatScore,source,tags,createdAt\n';
+    const csvRows = iocs.map(ioc => {
+      const tags = ioc.tags ? `"${ioc.tags.join(',')}"` : '';
+      const createdAt = ioc.createdAt ? new Date(ioc.createdAt).toISOString() : '';
+      return `${ioc.indicator},${ioc.iocType},${ioc.severity},${ioc.threatScore},${ioc.source},${tags},${createdAt}`;
+    }).join('\n');
+
+    const csvContent = csvHeader + csvRows;
+
+    // Set headers for CSV download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="ioc-export-${Date.now()}.csv"`);
+    
+    res.send(csvContent);
+
+    logger.info(`Export completed for user ${userId}: ${iocs.length} IOCs exported`);
+
+  } catch (err) {
+    logger.error(`exportIOCs error: ${err.message}`);
+    next(err);
+  }
+};
+
 module.exports = {
   searchIOC,
   getAllIOCs,
@@ -331,4 +902,9 @@ module.exports = {
   getIOCById,
   deleteIOC,
   flagFalsePositive,
+  getMitreCoverage,
+  updateMitreTechniques,
+  getGraphData,
+  bulkImportIOCs,
+  exportIOCs,
 };

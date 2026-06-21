@@ -1,0 +1,286 @@
+/* NotificationBell.css */
+
+.bell-container {
+  position: relative;
+  display: inline-block;
+}
+
+.bell-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #8a9bb0);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.bell-button:hover {
+  color: var(--cyan, #00d4ff);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.bell-button:active {
+  transform: scale(0.95);
+}
+
+.bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--red, #ff3b5c);
+  color: #ffffff;
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  font-weight: bold;
+  height: 15px;
+  min-width: 15px;
+  padding: 0 4px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px var(--red, #ff3b5c);
+  border: 1px solid var(--bg-elevated, #0f1923);
+}
+
+/* Bell Shake Animation when alerts are active */
+.bell-button.pulse svg {
+  animation: bellShake 1.5s ease-in-out infinite;
+  transform-origin: 50% 0;
+  color: var(--amber, #f5a623);
+}
+
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(10deg); }
+  30% { transform: rotate(-10deg); }
+  45% { transform: rotate(5deg); }
+  60% { transform: rotate(-5deg); }
+  75% { transform: rotate(2deg); }
+  85% { transform: rotate(-2deg); }
+}
+
+.bell-dropdown {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  width: 340px;
+  background: var(--bg-elevated, #0f1923);
+  border: 1px solid var(--border, #1e2d40);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3);
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bell-dropdown-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, #1e2d40);
+  display: flex;
+  justify-content: justify;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.01);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--text-dim, #8a9bb0);
+  flex-shrink: 0;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--cyan, #00d4ff);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.15s;
+}
+
+.btn-text:hover {
+  color: #fff;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+}
+
+.bell-dropdown-body {
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom Scrollbar */
+.bell-dropdown-body::-webkit-scrollbar {
+  width: 4px;
+}
+.bell-dropdown-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.bell-dropdown-body::-webkit-scrollbar-thumb {
+  background: var(--border, #1e2d40);
+  border-radius: 2px;
+}
+.bell-dropdown-body::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim, #8a9bb0);
+}
+
+.bell-empty-state {
+  padding: 36px 20px;
+  text-align: center;
+  color: var(--text-dim, #8a9bb0);
+}
+
+.bell-empty-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.bell-empty-state p {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Alert Item */
+.alert-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(30, 45, 64, 0.4);
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alert-item:last-child {
+  border-bottom: none;
+}
+
+.alert-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.alert-item.unread {
+  background: rgba(0, 212, 180, 0.02);
+  border-left: 2px solid var(--teal, #00d4b4);
+}
+
+.alert-item.unread:hover {
+  background: rgba(0, 212, 180, 0.04);
+}
+
+.alert-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: justify;
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  color: var(--text-dim, #8a9bb0);
+}
+
+.alert-severity {
+  font-weight: bold;
+}
+.alert-severity.critical { color: var(--red, #ff3b5c); }
+.alert-severity.high { color: var(--red, #ff3b5c); }
+.alert-severity.medium { color: var(--amber, #f5a623); }
+.alert-severity.low { color: var(--teal, #00d4b4); }
+
+.alert-time {
+  margin-left: auto;
+}
+
+.btn-delete-alert {
+  background: none;
+  border: none;
+  color: var(--text-dim, #8a9bb0);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 2px;
+  margin-left: 8px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.btn-delete-alert:hover {
+  color: var(--red, #ff3b5c);
+}
+
+.alert-item-indicator {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary, #ffffff);
+  word-break: break-all;
+}
+
+.alert-item-meta {
+  font-size: 10px;
+  color: var(--text-dim, #8a9bb0);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.alert-pattern {
+  color: var(--cyan, #00d4ff);
+  font-weight: 500;
+}
+
+.alert-type {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.bell-dropdown-footer {
+  border-top: 1px solid var(--border, #1e2d40);
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.01);
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-watchlist-settings {
+  background: none;
+  border: 1px solid var(--border, #1e2d40);
+  color: var(--text-secondary, #8a9bb0);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  padding: 6px 16px;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.btn-watchlist-settings:hover {
+  background: rgba(0, 212, 180, 0.05);
+  border-color: var(--teal, #00d4b4);
+  color: #fff;
+}
+
+/* Animating dropdown menu showing */
+.animate-dropdown {
+  animation: dropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: scale(0.95) translateY(-5px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}

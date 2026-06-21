@@ -20,27 +20,97 @@
 const cron             = require('node-cron');
 const openphishService = require('../services/openphishService');
 const IOC              = require('../models/IOC');
+const Watchlist        = require('../models/Watchlist');
+const Alert            = require('../models/Alert');
+const User             = require('../models/User');
+const { emitToUser }   = require('../services/socketService');
+const { sendAlertEmail } = require('../services/emailService');
 const logger           = require('../utils/logger');
+
+// ── Watchlist Matching Logic ────────────────────────────────
+const checkWatchlistsForNewIOCs = async (newIocs) => {
+  try {
+    const watchlists = await Watchlist.find().populate('userId').lean();
+    if (!watchlists || watchlists.length === 0) return;
+
+    for (const watchlist of watchlists) {
+      if (!watchlist.userId) continue;
+      const user = watchlist.userId; // populated
+      const patterns = watchlist.patterns || [];
+      if (patterns.length === 0) continue;
+
+      for (const ioc of newIocs) {
+        const indicatorLower = ioc.indicator.toLowerCase();
+        
+        // Find if any watchlist keyword matches the indicator or its tags
+        const matchedPattern = patterns.find(p => {
+          const patLower = p.toLowerCase();
+          return indicatorLower.includes(patLower) || 
+                 (ioc.tags && ioc.tags.some(t => t.toLowerCase().includes(patLower)));
+        });
+
+        if (matchedPattern) {
+          logger.info(`🎯 Watchlist match found for user ${user.username}: pattern "${matchedPattern}" on IOC "${ioc.indicator}"`);
+
+          // 1. Create alert document in database
+          const alert = await Alert.create({
+            userId: user._id,
+            iocId: ioc._id,
+            iocIndicator: ioc.indicator,
+            iocType: ioc.iocType,
+            severity: ioc.severity || 'High',
+            matchedPattern: matchedPattern,
+            read: false,
+          });
+
+          // 2. Emit alert via Socket.io
+          emitToUser(user._id.toString(), 'new-alert', {
+            _id: alert._id,
+            iocId: ioc._id,
+            iocIndicator: ioc.indicator,
+            iocType: ioc.iocType,
+            severity: ioc.severity || 'High',
+            matchedPattern: matchedPattern,
+            read: false,
+            createdAt: alert.createdAt
+          });
+
+          // 3. Optional email notification via emailService
+          if (user.email) {
+            sendAlertEmail(user.email, {
+              iocIndicator: ioc.indicator,
+              iocType: ioc.iocType,
+              severity: ioc.severity || 'High',
+              matchedPattern: matchedPattern
+            }).catch(e => logger.error(`Failed to send alert email: ${e.message}`));
+          }
+        }
+      }
+    }
+  } catch (err) {
+    logger.error(`Error checking watchlists: ${err.message}`);
+  }
+};
 
 // ── Main Job: Fetch OpenPhish Feed ─────────────────────────
 const fetchOpenPhishFeed = async () => {
   logger.info('🔄 Scheduled job: Fetching OpenPhish feed...');
-
+ 
   try {
     // Refresh the in-memory cache
     await openphishService.refreshFeed();
-
+ 
     // Get recent phishing URLs from the refreshed cache
     const phishingURLs = await openphishService.getRecentPhishingURLs(100);
-
+ 
     if (!phishingURLs || phishingURLs.length === 0) {
       logger.warn('OpenPhish feed returned no URLs');
       return;
     }
-
+ 
     let newCount     = 0;
     let updatedCount = 0;
-
+ 
     // Upsert each URL into the IOC collection
     // bulkWrite is much faster than individual save() calls
     const bulkOps = phishingURLs.map(urlData => ({
@@ -72,15 +142,24 @@ const fetchOpenPhishFeed = async () => {
         upsert: true, // Create if not exists
       },
     }));
-
+ 
     if (bulkOps.length > 0) {
       const result = await IOC.bulkWrite(bulkOps, { ordered: false });
       newCount     = result.upsertedCount;
       updatedCount = result.modifiedCount;
+
+      // Find documents in DB to get final IDs/details for watchlist matching
+      const savedIocs = await IOC.find({
+        indicator: { $in: phishingURLs.map(u => u.url) },
+        iocType: 'url'
+      }).lean();
+
+      // Scan all watchlists for matching patterns
+      await checkWatchlistsForNewIOCs(savedIocs);
     }
-
+ 
     logger.info(`✅ OpenPhish job complete: ${newCount} new, ${updatedCount} updated IOCs`);
-
+ 
   } catch (err) {
     logger.error(`OpenPhish fetch job failed: ${err.message}`);
   }

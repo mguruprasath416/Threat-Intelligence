@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import NotificationBell from './NotificationBell';
 import './Navbar.css';
 
 const Navbar = ({ onMenuToggle, sidebarOpen }) => {
@@ -76,6 +77,9 @@ const Navbar = ({ onMenuToggle, sidebarOpen }) => {
           <div className="clock-time">{formatTime(time)} UTC</div>
           <div className="clock-date">{formatDate(time)}</div>
         </div>
+
+        {/* ── Real-time Alerting Notification Bell ── */}
+        <NotificationBell />
 
         <div className="navbar-user"
           onClick={() => setShowUserMenu(p => !p)}>

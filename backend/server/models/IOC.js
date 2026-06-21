@@ -79,6 +79,7 @@ const IOCSchema = new mongoose.Schema({
     techniqueId:   String, // e.g. 'T1566.001'
     techniqueName: String, // e.g. 'Spearphishing Attachment'
     tactic:        String, // e.g. 'Initial Access'
+    killChainStage:String, // e.g. 'Delivery'
   }],
 
   // ── Geolocation (for IPs) ─────────────────────────────────

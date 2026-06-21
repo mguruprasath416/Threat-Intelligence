@@ -40,3 +40,8 @@
 .filter-select:focus,
 .filter-input:focus { border-color: var(--cyan); }
 .filter-input { width: 200px; }
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}

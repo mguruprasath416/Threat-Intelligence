@@ -11,6 +11,8 @@ import IOCSearch        from '../components/IOCSearch/IOCSearch';
 import ThreatCard       from '../components/ThreatCard/ThreatCard';
 import ThreatTable      from '../components/ThreatTable/ThreatTable';
 import Loader           from '../components/Loader/Loader';
+import BulkUpload       from '../components/BulkUpload/BulkUpload';
+import axios            from '../api/axios';
 import './SearchPage.css';
 
 // Filter bar component
@@ -65,6 +67,9 @@ const IOCSearchPage = () => {
     sortBy: 'createdAt', sortOrder: 'desc',
   });
 
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
   // Re-fetch whenever filters change (with 300ms debounce on search text)
   useEffect(() => {
     const delay = filters.search ? 300 : 0;
@@ -82,6 +87,39 @@ const IOCSearchPage = () => {
     }));
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const queryParams = new URLSearchParams({
+        severity: filters.severity || '',
+        iocType: filters.iocType || '',
+        search: filters.search || '',
+        isActive: 'true'
+      });
+
+      const response = await axios.get(`/api/ioc/export?${queryParams}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `ioc-export-${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Export failed. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="search-page animate-in">
 
@@ -90,6 +128,21 @@ const IOCSearchPage = () => {
         <div>
           <h1 className="page-title">IOC SEARCH & ANALYSIS</h1>
           <p className="page-subtitle">Enrich indicators against multiple threat intelligence sources</p>
+        </div>
+        <div className="header-actions">
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowBulkUpload(true)}
+          >
+            Bulk Import
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={handleExport}
+            disabled={exporting || !iocs.length}
+          >
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </button>
         </div>
       </div>
 
@@ -129,6 +182,13 @@ const IOCSearchPage = () => {
           />
         )}
       </div>
+
+      {/* ── Bulk Upload Modal ── */}
+      <BulkUpload
+        isOpen={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+        onSuccess={() => fetchIOCs(filters)}
+      />
 
     </div>
   );

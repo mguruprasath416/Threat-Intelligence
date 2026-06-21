@@ -37,6 +37,52 @@ const NAV_ITEMS = [
     ),
   },
   {
+    path:  '/graph',
+    label: 'RELATIONSHIP GRAPH',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="4" cy="4" r="2"
+          stroke="currentColor" strokeWidth="1.2"/>
+        <circle cx="12" cy="4" r="2"
+          stroke="currentColor" strokeWidth="1.2"/>
+        <circle cx="8" cy="12" r="2"
+          stroke="currentColor" strokeWidth="1.2"/>
+        <line x1="6" y1="4" x2="10" y2="4"
+          stroke="currentColor" strokeWidth="1.2"
+          strokeLinecap="round"/>
+        <line x1="5" y1="5.5" x2="7" y2="10.5"
+          stroke="currentColor" strokeWidth="1.2"
+          strokeLinecap="round"/>
+        <line x1="11" y1="5.5" x2="9" y2="10.5"
+          stroke="currentColor" strokeWidth="1.2"
+          strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    path:  '/hunt',
+    label: 'HUNT BUILDER',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="5"
+          stroke="currentColor" strokeWidth="1.2"/>
+        <circle cx="8" cy="8" r="2" fill="currentColor"/>
+        <line x1="8" y1="1" x2="8" y2="3"
+          stroke="currentColor" strokeWidth="1.2"
+          strokeLinecap="round"/>
+        <line x1="8" y1="13" x2="8" y2="15"
+          stroke="currentColor" strokeWidth="1.2"
+          strokeLinecap="round"/>
+        <line x1="1" y1="8" x2="3" y2="8"
+          stroke="currentColor" strokeWidth="1.2"
+          strokeLinecap="round"/>
+        <line x1="13" y1="8" x2="15" y2="8"
+          stroke="currentColor" strokeWidth="1.2"
+          strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
     path:  '/threat-feed',
     label: 'THREAT FEED',
     badge: 'LIVE',
@@ -49,6 +95,20 @@ const NAV_ITEMS = [
           strokeWidth="1.2" strokeLinecap="round"/>
         <path d="M8 11 L8 15" stroke="currentColor"
           strokeWidth="1.2" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    path:  '/threat-actors',
+    label: 'THREAT ACTORS',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="5" r="3"
+          stroke="currentColor" strokeWidth="1.2"/>
+        <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"
+          stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+        <circle cx="13" cy="4" r="1.5" fill="currentColor" opacity="0.7"/>
+        <path d="M13 6v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
       </svg>
     ),
   },

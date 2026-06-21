@@ -17,7 +17,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate }       from 'react-router-dom';
 import { useIOC }            from '../hooks/useIOC';
 import {
-  SeverityDonut, IOCTypePie, TrendLineChart, CountryBarChart
+  SeverityDonut, IOCTypePie, TrendLineChart, CountryBarChart, MitreHeatmap
 } from '../components/Charts/Charts';
 import Loader from '../components/Loader/Loader';
 import './Dashboard.css';
@@ -155,6 +155,15 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* ── MITRE ATT&CK Matrix Heatmap ── */}
+      <div className="card" style={{ marginTop: '24px' }}>
+        <div className="chart-panel-title">MITRE ATT&CK COVERAGE HEATMAP</div>
+        <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+          Active indicator coverage mapped across Cyber Kill Chain stages. Hover cells for details.
+        </div>
+        <MitreHeatmap />
+      </div>
 
     </div>
   );

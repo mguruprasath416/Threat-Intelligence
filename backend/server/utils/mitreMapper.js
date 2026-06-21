@@ -23,31 +23,31 @@
 // ── MITRE Technique Reference ──────────────────────────────
 // Subset of commonly observed techniques in threat intel
 const MITRE_TECHNIQUES = {
-  'T1566':     { name: 'Phishing',                         tactic: 'Initial Access' },
-  'T1566.001': { name: 'Spearphishing Attachment',         tactic: 'Initial Access' },
-  'T1566.002': { name: 'Spearphishing Link',               tactic: 'Initial Access' },
-  'T1071':     { name: 'Application Layer Protocol',       tactic: 'Command and Control' },
-  'T1071.001': { name: 'Web Protocols',                    tactic: 'Command and Control' },
-  'T1071.004': { name: 'DNS',                              tactic: 'Command and Control' },
-  'T1046':     { name: 'Network Service Scanning',         tactic: 'Discovery' },
-  'T1110':     { name: 'Brute Force',                      tactic: 'Credential Access' },
-  'T1110.001': { name: 'Password Guessing',                tactic: 'Credential Access' },
-  'T1204':     { name: 'User Execution',                   tactic: 'Execution' },
-  'T1204.002': { name: 'Malicious File',                   tactic: 'Execution' },
-  'T1041':     { name: 'Exfiltration Over C2 Channel',     tactic: 'Exfiltration' },
-  'T1048':     { name: 'Exfiltration Over Alt Protocol',   tactic: 'Exfiltration' },
-  'T1078':     { name: 'Valid Accounts',                   tactic: 'Defense Evasion' },
-  'T1059':     { name: 'Command and Scripting Interpreter',tactic: 'Execution' },
-  'T1055':     { name: 'Process Injection',                tactic: 'Defense Evasion' },
-  'T1027':     { name: 'Obfuscated Files or Information',  tactic: 'Defense Evasion' },
-  'T1190':     { name: 'Exploit Public-Facing Application',tactic: 'Initial Access' },
-  'T1133':     { name: 'External Remote Services',         tactic: 'Initial Access' },
-  'T1486':     { name: 'Data Encrypted for Impact',        tactic: 'Impact' }, // Ransomware
-  'T1036':     { name: 'Masquerading',                     tactic: 'Defense Evasion' },
+  'T1566':     { name: 'Phishing',                         tactic: 'Initial Access',             killChainStage: 'Delivery' },
+  'T1566.001': { name: 'Spearphishing Attachment',         tactic: 'Initial Access',             killChainStage: 'Delivery' },
+  'T1566.002': { name: 'Spearphishing Link',               tactic: 'Initial Access',             killChainStage: 'Delivery' },
+  'T1071':     { name: 'Application Layer Protocol',       tactic: 'Command and Control',        killChainStage: 'Command and Control' },
+  'T1071.001': { name: 'Web Protocols',                    tactic: 'Command and Control',        killChainStage: 'Command and Control' },
+  'T1071.004': { name: 'DNS',                              tactic: 'Command and Control',        killChainStage: 'Command and Control' },
+  'T1046':     { name: 'Network Service Scanning',         tactic: 'Discovery',                  killChainStage: 'Exploitation' },
+  'T1110':     { name: 'Brute Force',                      tactic: 'Credential Access',          killChainStage: 'Exploitation' },
+  'T1110.001': { name: 'Password Guessing',                tactic: 'Credential Access',          killChainStage: 'Exploitation' },
+  'T1204':     { name: 'User Execution',                   tactic: 'Execution',                  killChainStage: 'Installation' },
+  'T1204.002': { name: 'Malicious File',                   tactic: 'Execution',                  killChainStage: 'Installation' },
+  'T1041':     { name: 'Exfiltration Over C2 Channel',     tactic: 'Exfiltration',               killChainStage: 'Actions on Objectives' },
+  'T1048':     { name: 'Exfiltration Over Alt Protocol',   tactic: 'Exfiltration',               killChainStage: 'Actions on Objectives' },
+  'T1078':     { name: 'Valid Accounts',                   tactic: 'Defense Evasion',            killChainStage: 'Installation' },
+  'T1059':     { name: 'Command and Scripting Interpreter',tactic: 'Execution',                  killChainStage: 'Installation' },
+  'T1055':     { name: 'Process Injection',                tactic: 'Defense Evasion',            killChainStage: 'Installation' },
+  'T1027':     { name: 'Obfuscated Files or Information',  tactic: 'Defense Evasion',            killChainStage: 'Installation' },
+  'T1190':     { name: 'Exploit Public-Facing Application',tactic: 'Initial Access',             killChainStage: 'Exploitation' },
+  'T1133':     { name: 'External Remote Services',         tactic: 'Initial Access',             killChainStage: 'Delivery' },
+  'T1486':     { name: 'Data Encrypted for Impact',        tactic: 'Impact',                     killChainStage: 'Actions on Objectives' }, // Ransomware
+  'T1036':     { name: 'Masquerading',                     tactic: 'Defense Evasion',            killChainStage: 'Installation' },
 };
 
 // ── Main Mapping Function ──────────────────────────────────
-// Returns array of { techniqueId, techniqueName, tactic }
+// Returns array of { techniqueId, techniqueName, tactic, killChainStage }
 const mapToMitre = (iocType, enrichmentData, indicator) => {
   const techniques = new Map(); // Use Map to avoid duplicates
 
@@ -57,6 +57,7 @@ const mapToMitre = (iocType, enrichmentData, indicator) => {
         techniqueId:   id,
         techniqueName: MITRE_TECHNIQUES[id].name,
         tactic:        MITRE_TECHNIQUES[id].tactic,
+        killChainStage:MITRE_TECHNIQUES[id].killChainStage,
       });
     }
   };

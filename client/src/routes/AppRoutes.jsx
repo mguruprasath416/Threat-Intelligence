@@ -25,13 +25,16 @@ import MainLayout      from '../layouts/MainLayout';
 import Loader          from '../components/Loader/Loader';
 
 // Pages
-import Login      from '../pages/Login';
-import Dashboard  from '../pages/Dashboard';
-import IOCSearch  from '../pages/IOCSearch';
-import IOCDetails from '../pages/IOCDetails';
-import ThreatFeed from '../pages/ThreatFeed';
-import Reports    from '../pages/Reports';
-import NotFound   from '../pages/NotFound';
+import Login          from '../pages/Login';
+import Dashboard      from '../pages/Dashboard';
+import IOCSearch      from '../pages/IOCSearch';
+import IOCDetails     from '../pages/IOCDetails';
+import ThreatFeed     from '../pages/ThreatFeed';
+import Reports        from '../pages/Reports';
+import ThreatActorPage from '../pages/ThreatActorPage';
+import RelationshipGraph from '../pages/RelationshipGraph';
+import HuntQueryBuilder from '../pages/HuntQueryBuilder';
+import NotFound       from '../pages/NotFound';
 
 // ── Protected Route Wrapper ────────────────────────────────
 // Renders children only if authenticated, else redirects to /login
@@ -72,11 +75,16 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     >
-      <Route path="/dashboard"   element={<Dashboard />} />
-      <Route path="/search"      element={<IOCSearch />} />
-      <Route path="/ioc/:id"     element={<IOCDetails />} />
-      <Route path="/threat-feed" element={<ThreatFeed />} />
-      <Route path="/reports"     element={<Reports />} />
+      <Route path="/dashboard"        element={<Dashboard />} />
+      <Route path="/search"           element={<IOCSearch />} />
+      <Route path="/ioc/:id"          element={<IOCDetails />} />
+      <Route path="/graph"            element={<RelationshipGraph />} />
+      <Route path="/graph/:id"        element={<RelationshipGraph />} />
+      <Route path="/hunt"             element={<HuntQueryBuilder />} />
+      <Route path="/threat-feed"      element={<ThreatFeed />} />
+      <Route path="/reports"          element={<Reports />} />
+      <Route path="/threat-actors"    element={<ThreatActorPage />} />
+      <Route path="/threat-actors/:id" element={<ThreatActorPage />} />
     </Route>
 
     {/* ── 404 ── */}

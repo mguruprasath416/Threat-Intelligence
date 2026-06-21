@@ -1,49 +1,48 @@
 // ============================================================
-// controllers/authController.js — AUTHENTICATION LOGIC
+// controllers/authController.js — AUTHENTICATION LOGIC (OTP)
 // ============================================================
-// Handles user registration, login, and token management.
+// Passwordless email OTP authentication flow:
 //
-// Authentication flow:
-//   1. User POSTs credentials to /api/auth/login
-//   2. Server verifies password against bcrypt hash in DB
-//   3. Server generates a JWT (JSON Web Token)
-//   4. Client stores JWT (usually in memory or httpOnly cookie)
-//   5. Client sends JWT in Authorization header on every request
-//   6. authMiddleware validates the JWT on protected routes
+//   STEP 1 — POST /api/auth/send-otp
+//     → User provides their email
+//     → Server generates a 6-digit OTP, saves it to OtpToken collection
+//     → Sends OTP to user's email
+//     → If email not registered → auto-creates user account (first-time users)
 //
-// JWT structure: header.payload.signature
-//   payload contains: { userId, role, iat, exp }
-//   exp = expiry timestamp (7 days by default)
+//   STEP 2 — POST /api/auth/verify-otp
+//     → User provides email + OTP code
+//     → Server validates OTP (correct code, not expired, attempts ≤ 5)
+//     → Deletes used OTP, issues JWT
+//     → Client stores JWT for subsequent requests
 //
-// Why JWT over sessions?
-//   - Stateless — no session storage needed on server
-//   - Works across multiple server instances (horizontal scaling)
-//   - Self-contained — role info is in the token
+// Other routes:
+//   GET  /api/auth/me       → Return current user profile
+//   POST /api/auth/logout   → Clear auth cookie
 // ============================================================
 
-const jwt  = require('jsonwebtoken');
-const User = require('../models/User');
-const logger = require('../utils/logger');
+const crypto = require('crypto');
+const jwt      = require('jsonwebtoken');
+const User     = require('../models/User');
+const OtpToken = require('../models/OtpToken');
+const logger   = require('../utils/logger');
+const { sendOtpEmail } = require('../services/emailService');
 
 // ── Helper: Generate JWT ───────────────────────────────────
-const generateToken = (userId, role) => {
-  return jwt.sign(
+const generateToken = (userId, role) =>
+  jwt.sign(
     { userId, role },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE || '7d' }
   );
-};
 
 // ── Helper: Send Token Response ───────────────────────────
-// Builds the standardized auth response
 const sendTokenResponse = (user, statusCode, res) => {
   const token = generateToken(user._id, user.role);
 
-  // Cookie config for added security (in addition to returning in body)
   const cookieOptions = {
-    expires:  new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    httpOnly: true,   // Not accessible via JavaScript (XSS protection)
-    secure:   process.env.NODE_ENV === 'production', // HTTPS only in prod
+    expires:  new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+    secure:   process.env.NODE_ENV === 'production',
     sameSite: 'strict',
   };
 
@@ -63,95 +62,48 @@ const sendTokenResponse = (user, statusCode, res) => {
     });
 };
 
-// ── POST /api/auth/register ───────────────────────────────
-const register = async (req, res, next) => {
+// ── Helper: Generate 6-digit OTP ──────────────────────────
+const generateOtp = () =>
+  String(crypto.randomInt(100000, 999999));
+
+// ── POST /api/auth/send-otp ───────────────────────────────
+// Step 1: Accept email, send OTP
+const sendOtp = async (req, res, next) => {
   try {
-    const { username, email, password, firstName, lastName } = req.body;
+    const { email } = req.body;
 
-    // Basic field validation
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'username, email and password are required',
-      });
+    if (!email || !email.trim()) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
-    // Check for existing user
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
+    const normalizedEmail = email.trim().toLowerCase();
 
-    if (existingUser) {
-      const field = existingUser.email === email ? 'Email' : 'Username';
-      return res.status(409).json({ // 409 Conflict
-        success: false,
-        message: `${field} already in use`,
-      });
+    // Basic email format check
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: 'Invalid email format' });
     }
 
-    // Create user — password hashing happens in the model's pre-save hook
-    const user = await User.create({
-      username,
-      email,
-      password,
-      firstName,
-      lastName,
-      // First registered user gets admin role automatically
-      role: (await User.countDocuments({})) === 0 ? 'admin' : 'analyst',
-    });
-
-    logger.info(`New user registered: ${username} (${user.role})`);
-    
-    res.status(201).json({
-      success: true,
-      message: 'Account created successfully. Please sign in to continue.',
-      user: {
-        id:       user._id,
-        username: user.username,
-        email:    user.email,
-        role:     user.role,
-      },
-    });
-
-  } catch (err) {
-    // Mongoose duplicate key error
-    if (err.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: 'Username or email already exists',
-      });
-    }
-    logger.error(`register error: ${err.message}`);
-    next(err);
-  }
-};
-
-// ── POST /api/auth/login ──────────────────────────────────
-const login = async (req, res, next) => {
-  try {
-    const { identifier, password } = req.body;
-
-    if (!identifier || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Username/Email and password are required',
-      });
-    }
-
-    // Allow login with either email or username
-    const user = await User.findOne({
-      $or: [
-        { email:    identifier.toLowerCase() },
-        { username: identifier },
-      ]
-    }).select('+password');
+    // Find or create user (auto-register on first login)
+    let user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
-      // Intentionally vague error — don't reveal if email exists
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials',
+      // Auto-create account — generate a username from the email prefix
+      const emailPrefix = normalizedEmail.split('@')[0].replace(/[^a-z0-9_]/gi, '_');
+      const userCount   = await User.countDocuments({});
+
+      // Ensure username uniqueness by appending a short random suffix if needed
+      let username = emailPrefix;
+      const existing = await User.findOne({ username });
+      if (existing) username = `${emailPrefix}_${crypto.randomInt(100, 999)}`;
+
+      user = await User.create({
+        username,
+        email:    normalizedEmail,
+        role:     userCount === 0 ? 'admin' : 'analyst', // First user = admin
+        isActive: true,
       });
+
+      logger.info(`Auto-registered new user: ${username} (${user.role})`);
     }
 
     if (!user.isActive) {
@@ -161,38 +113,105 @@ const login = async (req, res, next) => {
       });
     }
 
-    // Compare entered password with stored bcrypt hash
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
+    // Delete any existing OTP for this email (only one active at a time)
+    await OtpToken.deleteMany({ email: normalizedEmail });
+
+    // Generate + store new OTP
+    const otp = generateOtp();
+    await OtpToken.create({ email: normalizedEmail, code: otp });
+
+    // Send email
+    await sendOtpEmail(normalizedEmail, otp);
+
+    logger.info(`OTP sent to: ${normalizedEmail}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Access code sent to your email. It expires in 10 minutes.',
+      // In dev mode only — return OTP in response for easy testing
+      ...(process.env.NODE_ENV === 'development' && { devOtp: otp }),
+    });
+
+  } catch (err) {
+    logger.error(`sendOtp error: ${err.message}`);
+    next(err);
+  }
+};
+
+// ── POST /api/auth/verify-otp ─────────────────────────────
+// Step 2: Verify OTP, issue JWT
+const verifyOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Find OTP record
+    const otpRecord = await OtpToken.findOne({ email: normalizedEmail });
+
+    if (!otpRecord) {
+      return res.status(400).json({
         success: false,
-        message: 'Invalid credentials',
+        message: 'No active code found. Please request a new one.',
       });
     }
 
-    // Update lastLogin timestamp
-    user.lastLogin = new Date();
-    await user.save({ validateBeforeSave: false }); // Skip full validation for this update
+    // Check attempt limit (max 5)
+    if (otpRecord.attempts >= 5) {
+      await OtpToken.deleteOne({ _id: otpRecord._id });
+      return res.status(429).json({
+        success: false,
+        message: 'Too many failed attempts. Please request a new code.',
+      });
+    }
 
-    logger.info(`User logged in: ${user.username}`);
+    // Check if OTP matches
+    if (otpRecord.code !== String(otp).trim()) {
+      // Increment attempt counter
+      otpRecord.attempts += 1;
+      await otpRecord.save();
+
+      const remaining = 5 - otpRecord.attempts;
+      return res.status(401).json({
+        success:   false,
+        message:   `Incorrect code. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`,
+        remaining,
+      });
+    }
+
+    // OTP is valid — delete it (single-use)
+    await OtpToken.deleteOne({ _id: otpRecord._id });
+
+    // Load user
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Update lastLogin
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    logger.info(`OTP verified — user logged in: ${user.username}`);
     sendTokenResponse(user, 200, res);
 
   } catch (err) {
-    logger.error(`login error: ${err.message}`);
+    logger.error(`verifyOtp error: ${err.message}`);
     next(err);
   }
 };
 
 // ── GET /api/auth/me ──────────────────────────────────────
-// Returns the currently authenticated user's profile
-// req.user is set by authMiddleware after JWT verification
 const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-
     res.status(200).json({ success: true, data: user });
   } catch (err) {
     next(err);
@@ -200,48 +219,14 @@ const getMe = async (req, res, next) => {
 };
 
 // ── POST /api/auth/logout ─────────────────────────────────
-// Clears the auth cookie (JWT itself can't be invalidated server-side
-// without a token blacklist — clearing cookie handles it for web clients)
 const logout = (req, res) => {
   res
     .cookie('token', 'none', {
-      expires:  new Date(Date.now() + 5 * 1000), // Expires in 5 seconds
+      expires:  new Date(Date.now() + 5 * 1000),
       httpOnly: true,
     })
     .status(200)
     .json({ success: true, message: 'Logged out successfully' });
 };
 
-// ── PUT /api/auth/password ────────────────────────────────
-// Change password for logged-in user
-const changePassword = async (req, res, next) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'currentPassword and newPassword are required',
-      });
-    }
-
-    const user = await User.findById(req.user.userId).select('+password');
-    const isValid = await user.comparePassword(currentPassword);
-
-    if (!isValid) {
-      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
-    }
-
-    user.password = newPassword; // Pre-save hook will hash it
-    await user.save();
-
-    logger.info(`Password changed for user: ${user.username}`);
-    sendTokenResponse(user, 200, res); // Send new token
-
-  } catch (err) {
-    logger.error(`changePassword error: ${err.message}`);
-    next(err);
-  }
-};
-
-module.exports = { register, login, getMe, logout, changePassword };
+module.exports = { sendOtp, verifyOtp, getMe, logout };

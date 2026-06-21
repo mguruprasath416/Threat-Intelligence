@@ -2,10 +2,10 @@
 // models/User.js — USER DATABASE SCHEMA
 // ============================================================
 // Defines the User document structure in MongoDB.
-// Handles password hashing automatically using bcrypt.
+// Passwordless authentication via email OTP.
 //
 // Security practices used:
-//   - Passwords are hashed with bcrypt (never stored as plaintext)
+//   - No password stored — users authenticate via email OTP
 //   - JWT tokens are used for session-less authentication
 //   - Role-based access: 'analyst' vs 'admin'
 // ============================================================
@@ -33,12 +33,11 @@ const UserSchema = new mongoose.Schema({
     match:    [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
   },
 
-  // NEVER store raw passwords — bcrypt hashes them
-  // select: false means password is NOT returned in queries by default
+  // Password field kept for backward compatibility but NOT required
+  // (passwordless OTP flow is the primary auth method)
   password: {
     type:     String,
-    required: [true, 'Password is required'],
-    minlength: [8, 'Password must be at least 8 characters'],
+    required: false,
     select:   false,
   },
 
@@ -66,26 +65,13 @@ const UserSchema = new mongoose.Schema({
   toJSON: { virtuals: true },
 });
 
-// ── Pre-Save Hook: Hash Password ───────────────────────────
-// This runs AUTOMATICALLY before every .save() call
-// Only re-hashes if the password field was actually changed
-// (prevents double-hashing on other field updates)
+// ── Pre-Save Hook: Hash Password (kept for compat) ────────
 UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-
-  // saltRounds: 12 = good balance of security vs performance
-  // Higher = slower hashing = harder to brute force
+  if (!this.isModified('password') || !this.password) return next();
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
-
-// ── Instance Method: Compare Password ─────────────────────
-// Used during login to check if entered password matches hash
-// Returns true/false
-UserSchema.methods.comparePassword = async function (enteredPassword) {
-  return bcrypt.compare(enteredPassword, this.password);
-};
 
 // ── Virtual: Full Name ─────────────────────────────────────
 UserSchema.virtual('fullName').get(function () {

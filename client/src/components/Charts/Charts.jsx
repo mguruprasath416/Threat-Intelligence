@@ -12,11 +12,13 @@
 // and custom Recharts tooltips styled to match the UI.
 // ============================================================
 
+import { useState, useEffect } from 'react';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Area, AreaChart,
   BarChart, Bar,
 } from 'recharts';
+import api from '../../api/axios';
 import './Charts.css';
 
 // ── Shared Custom Tooltip ──────────────────────────────────
@@ -239,3 +241,110 @@ const ChartEmpty = () => (
     <span>NO DATA AVAILABLE</span>
   </div>
 );
+
+// ── MITRE Heatmap ──────────────────────────────────────────
+export const MitreHeatmap = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCoverage = async () => {
+      try {
+        const response = await api.get('/ioc/mitre/coverage');
+        setData(response.data.data);
+      } catch (err) {
+        console.error('Failed to fetch MITRE coverage', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCoverage();
+  }, []);
+
+  const stages = {
+    'Delivery': [
+      { id: 'T1566', name: 'Phishing' },
+      { id: 'T1566.001', name: 'Spearphishing Attachment' },
+      { id: 'T1566.002', name: 'Spearphishing Link' },
+      { id: 'T1133', name: 'External Remote Services' },
+    ],
+    'Installation': [
+      { id: 'T1204', name: 'User Execution' },
+      { id: 'T1204.002', name: 'Malicious File' },
+      { id: 'T1078', name: 'Valid Accounts' },
+      { id: 'T1059', name: 'Command & Scripting' },
+      { id: 'T1055', name: 'Process Injection' },
+      { id: 'T1027', name: 'Obfuscated Files' },
+      { id: 'T1036', name: 'Masquerading' },
+    ],
+    'Exploitation': [
+      { id: 'T1046', name: 'Service Scanning' },
+      { id: 'T1110', name: 'Brute Force' },
+      { id: 'T1110.001', name: 'Password Guessing' },
+      { id: 'T1190', name: 'Exploit Public App' },
+    ],
+    'Command and Control': [
+      { id: 'T1071', name: 'Application Protocol' },
+      { id: 'T1071.001', name: 'Web Protocols' },
+      { id: 'T1071.004', name: 'DNS' },
+    ],
+    'Actions on Objectives': [
+      { id: 'T1041', name: 'Exfiltration over C2' },
+      { id: 'T1048', name: 'Exfil Alt Protocol' },
+      { id: 'T1486', name: 'Data Encrypted' },
+    ]
+  };
+
+  const getCount = (id) => {
+    const found = data.find(item => item.techniqueId === id);
+    return found ? found.count : 0;
+  };
+
+  const getIntensityClass = (count) => {
+    if (count === 0) return 'intensity-none';
+    if (count <= 2) return 'intensity-low';
+    if (count <= 5) return 'intensity-medium';
+    return 'intensity-high';
+  };
+
+  if (loading) {
+    return (
+      <div className="chart-empty">
+        <span>LOADING MITRE ATT&CK COVERAGE...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mitre-heatmap-container">
+      <div className="mitre-grid">
+        {Object.entries(stages).map(([stage, techniques]) => (
+          <div key={stage} className="mitre-column">
+            <div className="mitre-column-header">
+              <span className="stage-title">{stage.toUpperCase()}</span>
+            </div>
+            <div className="mitre-cells">
+              {techniques.map(tech => {
+                const count = getCount(tech.id);
+                return (
+                  <div
+                    key={tech.id}
+                    className={`mitre-cell ${getIntensityClass(count)}`}
+                    title={`${tech.name} (${tech.id})\nActive IOCs: ${count}`}
+                  >
+                    <div className="cell-top">
+                      <span className="cell-id">{tech.id}</span>
+                      {count > 0 && <span className="cell-count">{count}</span>}
+                    </div>
+                    <div className="cell-name">{tech.name}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+

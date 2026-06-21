@@ -111,3 +111,73 @@
   outline: none;
 }
 .filter-select:focus { border-color: var(--cyan); }
+
+/* ── STIX / TAXII Export Styling ────────────────── */
+.stix-export-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.stix-export-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+}
+
+.btn-stix {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 212, 180, 0.08);
+  border: 1px solid rgba(0, 212, 180, 0.25);
+  color: var(--teal, #00D4B4);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  height: 29px; /* aligns with filter-select */
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-stix:hover:not(:disabled) {
+  background: rgba(0, 212, 180, 0.16);
+  border-color: var(--teal, #00D4B4);
+  box-shadow: 0 0 10px rgba(0, 212, 180, 0.15);
+  color: #ffffff;
+}
+
+.btn-stix:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stix-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.stix-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: stixSpin 0.75s linear infinite;
+}
+
+@keyframes stixSpin {
+  to { transform: rotate(360deg); }
+}
+
+.stix-export-error {
+  color: var(--red, #FF3B5C);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
