@@ -43,7 +43,6 @@ const {
   flagFalsePositive,
   getMitreCoverage,
   updateMitreTechniques,
-  getGraphData,
   bulkImportIOCs,
   exportIOCs,
 } = require('../controllers/iocController');
@@ -68,7 +67,6 @@ router.get('/:id',        getIOCById);
 router.delete('/:id',     authorize('admin'), deleteIOC);
 router.patch('/:id/flag',  flagFalsePositive);
 router.patch('/:id/mitre', updateMitreTechniques);
-router.get('/:id/graph',  getGraphData);
 
 // ── Bulk Import/Export Routes (NEW) ─────────────────────────
 // POST /api/ioc/bulk-import → Upload CSV/JSON file for bulk import

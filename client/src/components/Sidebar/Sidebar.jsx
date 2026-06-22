@@ -37,48 +37,21 @@ const NAV_ITEMS = [
     ),
   },
   {
-    path:  '/graph',
-    label: 'RELATIONSHIP GRAPH',
+    path:  '/paste-monitor',
+    label: 'PASTE ALERTS',
+    badge: 'LIVE',
     icon: (
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <circle cx="4" cy="4" r="2"
-          stroke="currentColor" strokeWidth="1.2"/>
-        <circle cx="12" cy="4" r="2"
-          stroke="currentColor" strokeWidth="1.2"/>
-        <circle cx="8" cy="12" r="2"
-          stroke="currentColor" strokeWidth="1.2"/>
-        <line x1="6" y1="4" x2="10" y2="4"
+        <rect x="2" y="3" width="12" height="10"
+          stroke="currentColor" strokeWidth="1.2" rx="1"/>
+        <line x1="5" y1="6" x2="11" y2="6"
           stroke="currentColor" strokeWidth="1.2"
           strokeLinecap="round"/>
-        <line x1="5" y1="5.5" x2="7" y2="10.5"
+        <line x1="5" y1="8" x2="9" y2="8"
           stroke="currentColor" strokeWidth="1.2"
           strokeLinecap="round"/>
-        <line x1="11" y1="5.5" x2="9" y2="10.5"
-          stroke="currentColor" strokeWidth="1.2"
-          strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    path:  '/hunt',
-    label: 'HUNT BUILDER',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <circle cx="8" cy="8" r="5"
-          stroke="currentColor" strokeWidth="1.2"/>
-        <circle cx="8" cy="8" r="2" fill="currentColor"/>
-        <line x1="8" y1="1" x2="8" y2="3"
-          stroke="currentColor" strokeWidth="1.2"
-          strokeLinecap="round"/>
-        <line x1="8" y1="13" x2="8" y2="15"
-          stroke="currentColor" strokeWidth="1.2"
-          strokeLinecap="round"/>
-        <line x1="1" y1="8" x2="3" y2="8"
-          stroke="currentColor" strokeWidth="1.2"
-          strokeLinecap="round"/>
-        <line x1="13" y1="8" x2="15" y2="8"
-          stroke="currentColor" strokeWidth="1.2"
-          strokeLinecap="round"/>
+        <circle cx="12" cy="11" r="1.5"
+          fill="currentColor"/>
       </svg>
     ),
   },

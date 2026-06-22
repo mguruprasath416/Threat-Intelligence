@@ -32,8 +32,7 @@ import IOCDetails     from '../pages/IOCDetails';
 import ThreatFeed     from '../pages/ThreatFeed';
 import Reports        from '../pages/Reports';
 import ThreatActorPage from '../pages/ThreatActorPage';
-import RelationshipGraph from '../pages/RelationshipGraph';
-import HuntQueryBuilder from '../pages/HuntQueryBuilder';
+import PasteAlerts    from '../components/PasteAlerts/PasteAlerts';
 import NotFound       from '../pages/NotFound';
 
 // ── Protected Route Wrapper ────────────────────────────────
@@ -78,9 +77,7 @@ const AppRoutes = () => (
       <Route path="/dashboard"        element={<Dashboard />} />
       <Route path="/search"           element={<IOCSearch />} />
       <Route path="/ioc/:id"          element={<IOCDetails />} />
-      <Route path="/graph"            element={<RelationshipGraph />} />
-      <Route path="/graph/:id"        element={<RelationshipGraph />} />
-      <Route path="/hunt"             element={<HuntQueryBuilder />} />
+      <Route path="/paste-monitor"    element={<PasteAlerts />} />
       <Route path="/threat-feed"      element={<ThreatFeed />} />
       <Route path="/reports"          element={<Reports />} />
       <Route path="/threat-actors"    element={<ThreatActorPage />} />
