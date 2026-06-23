@@ -12,6 +12,7 @@ const taxiiRoutes  = require('./routes/taxiiRoutes');
 const watchlistRoutes = require('./routes/watchlistRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const pasteMonitorRoutes = require('./routes/pasteMonitorRoutes');
+const graphRoutes = require('./routes/graphRoutes');
 
 const errorMiddleware     = require('./middleware/errorMiddleware');
 const rateLimitMiddleware = require('./middleware/rateLimitMiddleware');
@@ -53,6 +54,7 @@ app.use('/api/taxii',   taxiiRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/alerts',  alertRoutes);
 app.use('/api/paste',   pasteMonitorRoutes);
+app.use('/api/graph',   graphRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });

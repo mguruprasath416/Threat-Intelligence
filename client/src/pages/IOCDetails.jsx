@@ -64,7 +64,7 @@ const IOCDetails = () => {
       {/* ── Action Buttons ── */}
       <div className="details-actions">
         <button className="btn btn-primary" onClick={() => navigate(`/graph/${id}`)}>
-          View Relationship Graph
+          View in Graph
         </button>
       </div>
 

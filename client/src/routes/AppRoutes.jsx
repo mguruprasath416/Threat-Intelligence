@@ -34,6 +34,7 @@ import Reports        from '../pages/Reports';
 import ThreatActorPage from '../pages/ThreatActorPage';
 import PasteAlerts    from '../components/PasteAlerts/PasteAlerts';
 import NotFound       from '../pages/NotFound';
+import RelationshipGraph from '../pages/RelationshipGraph';
 
 // ── Protected Route Wrapper ────────────────────────────────
 // Renders children only if authenticated, else redirects to /login
@@ -82,6 +83,8 @@ const AppRoutes = () => (
       <Route path="/reports"          element={<Reports />} />
       <Route path="/threat-actors"    element={<ThreatActorPage />} />
       <Route path="/threat-actors/:id" element={<ThreatActorPage />} />
+      <Route path="/graph"            element={<RelationshipGraph />} />
+      <Route path="/graph/:id"        element={<RelationshipGraph />} />
     </Route>
 
     {/* ── 404 ── */}

@@ -104,6 +104,20 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    path:  '/graph',
+    label: 'RELATIONSHIP GRAPH',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="4" r="2" stroke="currentColor" strokeWidth="1.2" />
+        <circle cx="4" cy="11" r="2" stroke="currentColor" strokeWidth="1.2" />
+        <circle cx="12" cy="11" r="2" stroke="currentColor" strokeWidth="1.2" />
+        <line x1="7" y1="5.5" x2="5" y2="9.5" stroke="currentColor" strokeWidth="1.2" />
+        <line x1="9" y1="5.5" x2="11" y2="9.5" stroke="currentColor" strokeWidth="1.2" />
+        <line x1="6" y1="11" x2="10" y2="11" stroke="currentColor" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
 ];
 
 const Sidebar = ({ isOpen, onClose }) => {
